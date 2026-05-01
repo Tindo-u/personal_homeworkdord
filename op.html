@@ -1443,8 +1443,8 @@
                 return deadline.toFormat('yyyy-MM-dd HH:mm');
             }
             
-            init() {
-                this.loadData();
+            async init() {
+                await this.loadData();
                 this.initEventListeners();
                 this.renderSubjects();
                 this.renderHomeworkList();
@@ -1452,12 +1452,34 @@
                 this.startDeadlineTimer();
             }
             
-            loadData() {
-                const subjectsData = localStorage.getItem('homeworkTracker_subjects');
-                this.subjects = subjectsData ? JSON.parse(subjectsData) : this.defaultSubjects;
-                
-                const homeworksData = localStorage.getItem('homeworkTracker_homeworks');
-                this.homeworks = homeworksData ? JSON.parse(homeworksData) : [];
+            async loadData() {
+                try {
+                    const response = await fetch('setting.json');
+                    const defaultData = await response.json();
+                    
+                    const subjectsData = localStorage.getItem('homeworkTracker_subjects');
+                    if (subjectsData) {
+                        this.subjects = JSON.parse(subjectsData);
+                    } else {
+                        this.subjects = defaultData.subjects || this.defaultSubjects;
+                        localStorage.setItem('homeworkTracker_subjects', JSON.stringify(this.subjects));
+                    }
+                    
+                    const homeworksData = localStorage.getItem('homeworkTracker_homeworks');
+                    if (homeworksData) {
+                        this.homeworks = JSON.parse(homeworksData);
+                    } else {
+                        this.homeworks = defaultData.homeworks || [];
+                        localStorage.setItem('homeworkTracker_homeworks', JSON.stringify(this.homeworks));
+                    }
+                } catch (error) {
+                    console.error('Failed to load setting.json:', error);
+                    const subjectsData = localStorage.getItem('homeworkTracker_subjects');
+                    this.subjects = subjectsData ? JSON.parse(subjectsData) : this.defaultSubjects;
+                    
+                    const homeworksData = localStorage.getItem('homeworkTracker_homeworks');
+                    this.homeworks = homeworksData ? JSON.parse(homeworksData) : [];
+                }
                 
                 const recycleBinData = localStorage.getItem('homeworkTracker_recycleBin');
                 this.recycleBin = recycleBinData ? JSON.parse(recycleBinData) : [];

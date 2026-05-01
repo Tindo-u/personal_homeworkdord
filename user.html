@@ -892,19 +892,43 @@
             });
         }
 
-        function loadData() {
-            const subjectsData = localStorage.getItem('homeworkTracker_subjects');
-            if (subjectsData) {
-                subjects.length = 0;
-                subjects.push(...JSON.parse(subjectsData));
+        async function loadData() {
+            try {
+                const response = await fetch('setting.json');
+                const defaultData = await response.json();
+                
+                const subjectsData = localStorage.getItem('homeworkTracker_subjects');
+                if (subjectsData) {
+                    subjects.length = 0;
+                    subjects.push(...JSON.parse(subjectsData));
+                } else {
+                    subjects.length = 0;
+                    subjects.push(...(defaultData.subjects || []));
+                    localStorage.setItem('homeworkTracker_subjects', JSON.stringify(subjects));
+                }
+
+                const homeworksData = localStorage.getItem('homeworkTracker_homeworks');
+                if (homeworksData) {
+                    homeworks = JSON.parse(homeworksData);
+                } else {
+                    homeworks = defaultData.homeworks || [];
+                    localStorage.setItem('homeworkTracker_homeworks', JSON.stringify(homeworks));
+                }
+            } catch (error) {
+                console.error('Failed to load setting.json:', error);
+                const subjectsData = localStorage.getItem('homeworkTracker_subjects');
+                if (subjectsData) {
+                    subjects.length = 0;
+                    subjects.push(...JSON.parse(subjectsData));
+                }
+
+                const homeworksData = localStorage.getItem('homeworkTracker_homeworks');
+                if (homeworksData) {
+                    homeworks = JSON.parse(homeworksData);
+                }
             }
 
-            const homeworksData = localStorage.getItem('homeworkTracker_homeworks');
-            if (homeworksData) {
-                homeworks = JSON.parse(homeworksData);
-            }
-
-            loadUserSettings();
+            await loadUserSettings();
             renderSubjectFilter();
             renderHomeworkList();
         }
@@ -1332,7 +1356,7 @@
             } catch (err) {
                 console.error('Failed to initialize IndexedDB:', err);
             }
-            loadData();
+            await loadData();
         };
     </script>
 </body>
