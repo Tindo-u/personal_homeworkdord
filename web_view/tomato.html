@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>番茄钟 - 学习专注计时器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --primary-color: #e74c3c;
+            --secondary-color: #27ae60;
+            --accent-color: #3498db;
+            --text-color: #2c3e50;
+            --text-light: #7f8c8d;
+            --border-radius: 16px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 32px;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-size: 1.8rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-left h1 i {
+            color: var(--primary-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .settings-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .settings-btn:hover {
+            color: var(--text-color);
+            transform: rotate(45deg);
+        }
+
+        .mode-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .mode-btn {
+            padding: 14px 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #f0f0f0;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mode-btn i {
+            font-size: 1.2rem;
+        }
+
+        .mode-btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.active {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .mode-btn.active.short-break {
+            background: var(--secondary-color);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+
+        .mode-btn.active.long-break {
+            background: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .timer-container {
+            text-align: center;
+            margin-bottom: 28px;
+            position: relative;
+        }
+
+        .timer-circle {
+            width: 240px;
+            height: 240px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            fill: none;
+            stroke: #e0e0e0;
+            stroke-width: 10;
+        }
+
+        .progress-ring-circle-fill {
+            fill: none;
+            stroke: var(--primary-color);
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .timer-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+            letter-spacing: 2px;
+        }
+
+        .timer-label {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .primary-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .secondary-btn {
+            background: #f0f0f0;
+            color: var(--text-color);
+        }
+
+        .secondary-btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .stats {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .session-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .session-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        .session-item:last-child {
+            border-bottom: none;
+        }
+
+        .session-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .session-type i {
+            width: 24px;
+            text-align: center;
+        }
+
+        .session-type.study i { color: var(--primary-color); }
+        .session-type.short-break i { color: var(--secondary-color); }
+        .session-type.long-break i { color: var(--accent-color); }
+
+        .session-time {
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        /* 设置面板样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h2 {
+            font-size: 1.4rem;
+            color: var(--text-color);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--text-color);
+        }
+
+        .setting-group {
+            margin-bottom: 24px;
+        }
+
+        .setting-group h3 {
+            font-size: 1rem;
+            color: var(--text-color);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        .setting-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-input {
+            width: 70px;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .setting-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .setting-unit {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .ringtone-select {
+            width: 150px;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .ringtone-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .preview-btn {
+            padding: 8px 12px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .preview-btn:hover {
+            background: #2980b9;
+        }
+
+        .modal-footer {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #c0392b;
+        }
+
+        .modal-btn.secondary {
+            background: #f0f0f0;
+            color: var(--text-color);
+        }
+
+        .modal-btn.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 24px;
+            }
+
+            .header-left h1 {
+                font-size: 1.5rem;
+            }
+
+            .timer-circle {
+                width: 200px;
+                height: 200px;
+            }
+
+            .timer-display {
+                font-size: 2.8rem;
+            }
+
+            .mode-btn {
+                padding: 12px 8px;
+                font-size: 0.8rem;
+            }
+
+            .mode-btn i {
+                font-size: 1rem;
+            }
+        }
+
+        /* 全屏模式 */
+        body.fullscreen-mode {
+            background: #000000;
+            padding: 0;
+        }
+
+        body.fullscreen-mode .container {
+            max-width: none;
+            width: 100%;
+            height: 100vh;
+        }
+
+        body.fullscreen-mode .card {
+            height: 100%;
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            background: #000000;
+            color: #ffffff;
+        }
+
+        body.fullscreen-mode .header,
+        body.fullscreen-mode .stats,
+        body.fullscreen-mode .footer,
+        body.fullscreen-mode .mode-selector {
+            display: none;
+        }
+
+        body.fullscreen-mode .timer-circle {
+            width: 300px;
+            height: 300px;
+        }
+
+        body.fullscreen-mode .timer-display {
+            font-size: 5rem;
+            color: #ffffff;
+        }
+
+        body.fullscreen-mode .timer-label {
+            font-size: 1.3rem;
+            color: #aaaaaa;
+        }
+
+        body.fullscreen-mode .progress-ring-circle {
+            stroke: #333333;
+        }
+
+        body.fullscreen-mode .controls {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 40px;
+        }
+
+        body.fullscreen-mode .control-btn {
+            padding: 20px;
+            font-size: 1.2rem;
+        }
+
+        body.fullscreen-mode .secondary-btn {
+            background: #333333;
+            color: #ffffff;
+        }
+
+        body.fullscreen-mode .secondary-btn:hover {
+            background: #444444;
+        }
+
+        body.fullscreen-mode .primary-btn {
+            background: var(--primary-color);
+        }
+
+        .exit-fullscreen-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .exit-fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        body.fullscreen-mode .exit-fullscreen-btn {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <button class="exit-fullscreen-btn" onclick="toggleFullscreen()">
+        <i class="fas fa-compress"></i>
+    </button>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="header-left">
+                    <h1><i class="fas fa-tomato"></i> 番茄钟</h1>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="settings-btn" onclick="window.location.href='user.html'">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="settings-btn" onclick="toggleFullscreen()">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="settings-btn" onclick="openSettings()">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="study" onclick="setMode('study')">
+                    <i class="fas fa-book"></i>
+                    <span>学习</span>
+                </button>
+                <button class="mode-btn short-break" data-mode="short-break" onclick="setMode('short-break')">
+                    <i class="fas fa-coffee"></i>
+                    <span>短休息</span>
+                </button>
+                <button class="mode-btn long-break" data-mode="long-break" onclick="setMode('long-break')">
+                    <i class="fas fa-utensils"></i>
+                    <span>长休息</span>
+                </button>
+            </div>
+
+            <div class="timer-container">
+                <div class="timer-circle">
+                    <svg class="progress-ring" width="240" height="240">
+                        <circle class="progress-ring-circle" cx="120" cy="120" r="105"></circle>
+                        <circle class="progress-ring-circle-fill" cx="120" cy="120" r="105" 
+                            stroke-dasharray="659.7" stroke-dashoffset="0"></circle>
+                    </svg>
+                    <div class="timer-display" id="timerDisplay">25:00</div>
+                    <div class="timer-label" id="timerLabel">准备开始</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn secondary-btn" onclick="resetTimer()">
+                    <i class="fas fa-redo"></i> 重置
+                </button>
+                <button class="control-btn primary-btn" id="startBtn" onclick="toggleTimer()">
+                    <i class="fas fa-play" id="startIcon"></i> 
+                    <span id="startText">开始</span>
+                </button>
+            </div>
+
+            <div class="stats">
+                <div class="stats-title">
+                    <i class="fas fa-chart-bar"></i> 今日统计
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="studyCount">0</div>
+                        <div class="stat-label">学习次数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalMinutes">0</div>
+                        <div class="stat-label">专注分钟</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="sessionCount">0</div>
+                        <div class="stat-label">完成会话</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stats-title">
+                    <i class="fas fa-history"></i> 今日记录
+                </div>
+                <div class="session-list" id="sessionList">
+                    <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                        暂无记录
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>番茄工作法-by-Tindou © 2026</p>
+        </div>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> 设置</h2>
+                <button class="close-btn" onclick="closeSettings()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="setting-group">
+                <h3><i class="fas fa-clock"></i> 时间设置</h3>
+                <div class="setting-item">
+                    <span class="setting-label">学习时间</span>
+                    <div class="setting-input-wrapper">
+                        <input type="number" class="setting-input" id="studyDuration" min="1" max="120" value="25">
+                        <span class="setting-unit">分钟</span>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">短休息时间</span>
+                    <div class="setting-input-wrapper">
+                        <input type="number" class="setting-input" id="shortBreakDuration" min="1" max="60" value="5">
+                        <span class="setting-unit">分钟</span>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <span class="setting-label">长休息时间</span>
+                    <div class="setting-input-wrapper">
+                        <input type="number" class="setting-input" id="longBreakDuration" min="1" max="60" value="15">
+                        <span class="setting-unit">分钟</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3><i class="fas fa-bell"></i> 铃声设置</h3>
+                <div class="setting-item">
+                    <span class="setting-label">提示铃声</span>
+                    <div class="setting-input-wrapper">
+                        <select class="ringtone-select" id="ringtoneSelect">
+                            <option value="default">默认铃声</option>
+                            <option value="bell">清脆铃声</option>
+                            <option value="chime">柔和铃声</option>
+                            <option value="alarm">闹铃</option>
+                            <option value="ding">叮咚</option>
+                        </select>
+                        <button class="preview-btn" onclick="previewRingtone()">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="modal-btn secondary" onclick="resetSettings()">重置</button>
+                <button class="modal-btn primary" onclick="saveSettings()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IndexedDB 配置（与user.html共享）
+        const DB_NAME = 'userHomeworkDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'backgrounds';
+        let db = null;
+
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                try {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    
+                    request.onerror = (e) => {
+                        console.error('IndexedDB open error:', e);
+                        reject(request.error);
+                    };
+                    request.onsuccess = () => {
+                        db = request.result;
+                        resolve(db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const database = event.target.result;
+                        if (!database.objectStoreNames.contains(STORE_NAME)) {
+                            database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        }
+                    };
+                } catch (err) {
+                    console.error('IndexedDB init error:', err);
+                    reject(err);
+                }
+            });
+        }
+
+        async function loadBackgroundFromIDB() {
+            if (!db) {
+                try {
+                    await initIndexedDB();
+                } catch (err) {
+                    console.error('Failed to init DB:', err);
+                    return null;
+                }
+            }
+            
+            return new Promise((resolve, reject) => {
+                try {
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.get('backgroundImage');
+                    
+                    request.onsuccess = () => {
+                        const result = request.result;
+                        if (result && result.data) {
+                            resolve(result.data);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    request.onerror = (e) => {
+                        console.error('Load from IDB error:', e);
+                        reject(request.error);
+                    };
+                } catch (err) {
+                    console.error('Load error:', err);
+                    resolve(null);
+                }
+            });
+        }
+
+        let settings = {
+            studyDuration: 25,
+            shortBreakDuration: 5,
+            longBreakDuration: 15,
+            ringtone: 'default'
+        };
+
+        const MODES = {
+            'study': { duration: settings.studyDuration * 60, label: '学习时间', color: '#e74c3c' },
+            'short-break': { duration: settings.shortBreakDuration * 60, label: '短休息', color: '#27ae60' },
+            'long-break': { duration: settings.longBreakDuration * 60, label: '长休息', color: '#3498db' }
+        };
+
+        let currentMode = 'study';
+        let timeLeft = MODES[currentMode].duration;
+        let totalTime = MODES[currentMode].duration;
+        let isRunning = false;
+        let timerInterval = null;
+        let studySessions = 0;
+        let totalMinutes = 0;
+        let sessions = [];
+        let todayDate = new Date().toDateString();
+
+        // 铃声配置
+        const RINGTONES = {
+            'default': [
+                { freq: 800, duration: 0.5, delay: 0 },
+                { freq: 1000, duration: 0.5, delay: 0.3 }
+            ],
+            'bell': [
+                { freq: 523, duration: 0.15, delay: 0 },
+                { freq: 659, duration: 0.15, delay: 0.15 },
+                { freq: 784, duration: 0.3, delay: 0.3 }
+            ],
+            'chime': [
+                { freq: 600, duration: 0.3, delay: 0 },
+                { freq: 800, duration: 0.3, delay: 0.2 },
+                { freq: 1000, duration: 0.4, delay: 0.4 }
+            ],
+            'alarm': [
+                { freq: 880, duration: 0.15, delay: 0 },
+                { freq: 880, duration: 0.15, delay: 0.2 },
+                { freq: 880, duration: 0.15, delay: 0.4 },
+                { freq: 440, duration: 0.4, delay: 0.6 }
+            ],
+            'ding': [
+                { freq: 1200, duration: 0.2, delay: 0 },
+                { freq: 900, duration: 0.3, delay: 0.15 }
+            ]
+        };
+
+        async function loadAllData() {
+            const savedSettings = localStorage.getItem('tomatoSettings');
+            if (savedSettings) {
+                settings = JSON.parse(savedSettings);
+                updateModeDurations();
+            }
+
+            const savedData = localStorage.getItem('tomatoData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                if (data.date === todayDate) {
+                    studySessions = data.studySessions || 0;
+                    totalMinutes = data.totalMinutes || 0;
+                    sessions = data.sessions || [];
+                }
+            }
+
+            // 从IndexedDB加载user.html的背景图片
+            try {
+                const bgBlob = await loadBackgroundFromIDB();
+                if (bgBlob) {
+                    const url = URL.createObjectURL(bgBlob);
+                    document.body.style.backgroundImage = `url('${url}')`;
+                    document.body.style.backgroundAttachment = 'fixed';
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                }
+            } catch (err) {
+                console.error('Failed to load background:', err);
+            }
+
+            updateStats();
+            renderSessionList();
+            updateSettingsUI();
+        }
+
+        function updateModeDurations() {
+            MODES['study'].duration = settings.studyDuration * 60;
+            MODES['short-break'].duration = settings.shortBreakDuration * 60;
+            MODES['long-break'].duration = settings.longBreakDuration * 60;
+            timeLeft = MODES[currentMode].duration;
+            totalTime = MODES[currentMode].duration;
+            updateDisplay();
+        }
+
+        function saveData() {
+            const data = {
+                date: todayDate,
+                studySessions,
+                totalMinutes,
+                sessions
+            };
+            localStorage.setItem('tomatoData', JSON.stringify(data));
+        }
+
+        function saveSettings() {
+            localStorage.setItem('tomatoSettings', JSON.stringify(settings));
+            updateModeDurations();
+            closeSettings();
+        }
+
+        function resetSettings() {
+            settings = {
+                studyDuration: 25,
+                shortBreakDuration: 5,
+                longBreakDuration: 15,
+                ringtone: 'default'
+            };
+            updateSettingsUI();
+        }
+
+        function updateSettingsUI() {
+            document.getElementById('studyDuration').value = settings.studyDuration;
+            document.getElementById('shortBreakDuration').value = settings.shortBreakDuration;
+            document.getElementById('longBreakDuration').value = settings.longBreakDuration;
+            document.getElementById('ringtoneSelect').value = settings.ringtone;
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+            document.getElementById('studyDuration').value = settings.studyDuration;
+            document.getElementById('shortBreakDuration').value = settings.shortBreakDuration;
+            document.getElementById('longBreakDuration').value = settings.longBreakDuration;
+            document.getElementById('ringtoneSelect').value = settings.ringtone;
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+            settings.studyDuration = parseInt(document.getElementById('studyDuration').value) || 25;
+            settings.shortBreakDuration = parseInt(document.getElementById('shortBreakDuration').value) || 5;
+            settings.longBreakDuration = parseInt(document.getElementById('longBreakDuration').value) || 15;
+            settings.ringtone = document.getElementById('ringtoneSelect').value;
+        }
+
+        function previewRingtone() {
+            const ringtone = document.getElementById('ringtoneSelect').value;
+            playAlert(ringtone);
+        }
+
+        function setMode(mode) {
+            if (isRunning) {
+                if (!confirm('计时器正在运行，确定要切换模式吗？')) {
+                    return;
+                }
+                stopTimer();
+            }
+
+            currentMode = mode;
+            timeLeft = MODES[mode].duration;
+            totalTime = MODES[mode].duration;
+
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+
+            document.querySelector('.progress-ring-circle-fill').style.stroke = MODES[mode].color;
+            document.getElementById('startBtn').style.background = MODES[mode].color;
+            document.getElementById('startBtn').style.boxShadow = `0 4px 12px rgba(${mode === 'study' ? '231, 76, 60' : mode === 'short-break' ? '39, 174, 96' : '52, 152, 219'}, 0.3)`;
+
+            updateDisplay();
+            document.getElementById('timerLabel').textContent = '准备开始';
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
+            const circle = document.querySelector('.progress-ring-circle-fill');
+            const circumference = 2 * Math.PI * 105;
+            const offset = circumference * (1 - timeLeft / totalTime);
+            circle.style.strokeDashoffset = offset;
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                stopTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            isRunning = true;
+            document.getElementById('startIcon').className = 'fas fa-pause';
+            document.getElementById('startText').textContent = '暂停';
+            document.getElementById('timerLabel').textContent = MODES[currentMode].label + '中...';
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+
+                if (timeLeft <= 0) {
+                    completeSession();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('startIcon').className = 'fas fa-play';
+            document.getElementById('startText').textContent = '继续';
+            document.getElementById('timerLabel').textContent = '已暂停';
+        }
+
+        function resetTimer() {
+            if (isRunning) {
+                stopTimer();
+            }
+            timeLeft = MODES[currentMode].duration;
+            totalTime = MODES[currentMode].duration;
+            updateDisplay();
+            document.getElementById('startIcon').className = 'fas fa-play';
+            document.getElementById('startText').textContent = '开始';
+            document.getElementById('timerLabel').textContent = '准备开始';
+        }
+
+        function completeSession() {
+            stopTimer();
+            
+            playAlert(settings.ringtone);
+            
+            const elapsed = totalTime - timeLeft;
+            if (currentMode === 'study') {
+                studySessions++;
+                totalMinutes += Math.round(elapsed / 60);
+            }
+
+            sessions.unshift({
+                type: currentMode,
+                duration: elapsed,
+                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+            });
+            if (sessions.length > 20) {
+                sessions.pop();
+            }
+
+            saveData();
+            updateStats();
+            renderSessionList();
+
+            document.getElementById('timerLabel').textContent = '已完成！';
+
+            if (currentMode === 'study') {
+                if (studySessions % 4 === 0) {
+                    setMode('long-break');
+                } else {
+                    setMode('short-break');
+                }
+            } else {
+                setMode('study');
+            }
+
+            resetTimer();
+        }
+
+        function playAlert(ringtoneType = 'default') {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const ringtone = RINGTONES[ringtoneType] || RINGTONES['default'];
+
+            ringtone.forEach(note => {
+                setTimeout(() => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = note.freq;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + note.duration);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + note.duration);
+                }, note.delay * 1000);
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('studyCount').textContent = studySessions;
+            document.getElementById('totalMinutes').textContent = totalMinutes;
+            document.getElementById('sessionCount').textContent = sessions.length;
+        }
+
+        function renderSessionList() {
+            const list = document.getElementById('sessionList');
+            if (sessions.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                        暂无记录
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = sessions.map(session => {
+                const icons = {
+                    'study': 'fa-book',
+                    'short-break': 'fa-coffee',
+                    'long-break': 'fa-utensils'
+                };
+                const labels = {
+                    'study': '学习',
+                    'short-break': '短休息',
+                    'long-break': '长休息'
+                };
+                const mins = Math.floor(session.duration / 60);
+                const secs = session.duration % 60;
+                
+                return `
+                    <div class="session-item">
+                        <div class="session-type ${session.type}">
+                            <i class="fas ${icons[session.type]}"></i>
+                            <span>${labels[session.type]}</span>
+                            <span style="color: var(--text-light); font-size: 0.85rem;">
+                                (${mins}:${secs.toString().padStart(2, '0')})
+                            </span>
+                        </div>
+                        <div class="session-time">${session.time}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 全屏切换功能
+        let isFullscreen = false;
+
+        function toggleFullscreen() {
+            isFullscreen = !isFullscreen;
+            document.body.classList.toggle('fullscreen-mode');
+
+            const btn = document.querySelector('.settings-btn i.fas.fa-expand');
+            if (btn) {
+                btn.classList.toggle('fa-expand');
+                btn.classList.toggle('fa-compress');
+            }
+
+            if (isFullscreen) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        // 监听全屏变化
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+        function handleFullscreenChange() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                isFullscreen = false;
+                document.body.classList.remove('fullscreen-mode');
+                const btn = document.querySelector('.settings-btn i.fas.fa-compress');
+                if (btn) {
+                    btn.classList.remove('fa-compress');
+                    btn.classList.add('fa-expand');
+                }
+            }
+        }
+
+        // 点击设置面板外部关闭
+        document.getElementById('settingsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSettings();
+            }
+        });
+
+        window.onload = async function() {
+            try {
+                await initIndexedDB();
+            } catch (err) {
+                console.error('Failed to initialize IndexedDB:', err);
+            }
+            await loadAllData();
+            updateDisplay();
+        };
+    </script>
+</body>
+</html>
