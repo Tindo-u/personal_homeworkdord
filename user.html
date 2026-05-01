@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>作业查看-如异常请刷新页面</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --primary-color: #3498db;
+            --secondary-color: #27ae60;
+            --accent-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --text-color: #2c3e50;
+            --text-light: #7f8c8d;
+            --border-radius: 16px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --card-opacity: 0.9;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.5s ease-out;
+            margin-bottom: 20px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 i {
+            color: var(--primary-color);
+        }
+
+        .settings-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .settings-btn:hover {
+            color: var(--text-color);
+            transform: rotate(45deg);
+        }
+
+        .subject-filter-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .subject-filter-toggle:hover {
+            background: #e9ecef;
+        }
+
+        .subject-filter {
+            display: none;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .subject-filter.active {
+            display: flex;
+        }
+
+        .subject-item {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .subject-item:hover {
+            transform: scale(1.05);
+        }
+
+        .subject-item.active {
+            color: white;
+        }
+
+        .homework-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .homework-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+            position: relative;
+        }
+
+        .homework-card.drag-over {
+            border: 2px dashed var(--primary-color);
+            transform: translateY(-5px);
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #c8ebfb;
+        }
+
+        .sortable-chosen {
+            opacity: 0.8;
+            transform: rotate(1deg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .sortable-drag {
+            opacity: 0.9;
+            transform: rotate(3deg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .homework-card.dragging {
+            opacity: 0.8;
+            transform: rotate(2deg);
+        }
+
+        .drag-handle {
+            color: var(--text-light);
+            cursor: grab;
+            font-size: 1.3rem;
+            transition: all 0.2s ease;
+        }
+
+        .drag-handle:hover {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .homework-card.completed {
+            opacity: 0.6;
+        }
+
+        .homework-card.urgent {
+            border-left-color: var(--danger-color);
+            background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+        }
+
+        .homework-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .subject-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .homework-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .homework-card.completed .homework-title {
+            text-decoration: line-through;
+        }
+
+        .homework-content {
+            font-size: 0.95rem;
+            color: var(--text-color);
+            line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .homework-content h3 {
+            font-size: 1.1rem;
+            margin: 8px 0;
+        }
+
+        .homework-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .homework-content li {
+            margin: 4px 0;
+        }
+
+        .homework-content code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .homework-images {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .homework-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .homework-image:hover {
+            transform: scale(1.05);
+        }
+
+        .deadline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .deadline i {
+            color: var(--text-light);
+        }
+
+        .deadline.urgent {
+            background: #fff5f5;
+            color: var(--danger-color);
+        }
+
+        .deadline.urgent i {
+            color: var(--danger-color);
+        }
+
+        .deadline.warning {
+            background: #fff9e6;
+            color: var(--warning-color);
+        }
+
+        .deadline.warning i {
+            color: var(--warning-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+        }
+
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .image-modal.active {
+            display: flex;
+        }
+
+        .image-modal-content {
+            max-width: 100%;
+            max-height: 100%;
+            position: relative;
+        }
+
+        .image-modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .image-modal-close:hover {
+            transform: rotate(90deg);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--danger-color);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .setting-group {
+            margin-bottom: 24px;
+        }
+
+        .setting-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-group h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-color);
+        }
+
+        .setting-item {
+            margin-bottom: 16px;
+        }
+
+        .setting-label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .setting-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .setting-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .setting-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .setting-unit {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: var(--text-color);
+            transform: scale(1.1);
+        }
+
+        .modal-footer {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #2980b9;
+        }
+
+        .modal-btn.secondary {
+            background: #f0f0f0;
+            color: var(--text-color);
+        }
+
+        .modal-btn.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .subject-edit-item, .preset-edit-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .color-preview-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .time-input {
+            width: 50px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .time-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .hidden-homework {
+            opacity: 0.5;
+            background: #f8f8f8;
+        }
+
+        .hidden-homework .homework-title {
+            font-style: italic;
+        }
+
+        .btn-group {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 3;
+        }
+
+        .hide-btn {
+            background: rgba(0, 0, 0, 0.1);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+        }
+
+        .hide-btn:hover {
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+        }
+
+        .hide-btn.hidden {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger-color);
+        }
+
+        .hide-btn.hidden:hover {
+            background: rgba(231, 76, 60, 0.2);
+        }
+
+        .drag-handle {
+            cursor: grab;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+        }
+
+        .drag-handle:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1><i class="fas fa-book"></i> 学生作业查看</h1>
+                <div style="display: flex; gap: 8px;">
+                    <button class="settings-btn" onclick="window.location.href='tomato.html'">
+                        <i class="fas fa-clock"></i>
+                    </button>
+                    <button class="settings-btn" onclick="openSettings()">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="subject-filter-toggle" onclick="toggleSubjectFilter()">
+                <i class="fas fa-filter"></i>
+                <span id="filterLabel">全部作业</span>
+                <i class="fas fa-chevron-down" style="margin-left: auto;"></i>
+            </div>
+
+            <div class="subject-filter" id="subjectFilter">
+            </div>
+
+            <div class="homework-list" id="homeworkList">
+            </div>
+        </div>
+    </div>
+
+    <div class="image-modal" id="imageModal">
+        <div class="image-modal-content">
+            <img id="modalImage" src="" alt="预览图片">
+            <button class="image-modal-close" onclick="closeImageModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> 设置</h2>
+                <button class="close-btn" onclick="closeSettings()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="setting-group">
+                    <h3><i class="fas fa-palette"></i> 主题颜色</h3>
+                    <div class="color-options">
+                        <div class="color-option" style="background: #3498db;" onclick="applyTheme('#3498db')" title="蓝色"></div>
+                        <div class="color-option" style="background: #e74c3c;" onclick="applyTheme('#e74c3c')" title="红色"></div>
+                        <div class="color-option" style="background: #27ae60;" onclick="applyTheme('#27ae60')" title="绿色"></div>
+                        <div class="color-option" style="background: #9b59b6;" onclick="applyTheme('#9b59b6')" title="紫色"></div>
+                        <div class="color-option" style="background: #f39c12;" onclick="applyTheme('#f39c12')" title="橙色"></div>
+                        <div class="color-option" style="background: #1abc9c;" onclick="applyTheme('#1abc9c')" title="青色"></div>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <h3><i class="fas fa-paint-brush"></i> 背景设置</h3>
+                    <div class="setting-item">
+                        <input type="file" id="bgUpload" class="setting-input" accept="image/*" onchange="handleBgUpload(event)" style="display: none;">
+                        <button class="modal-btn secondary" onclick="document.getElementById('bgUpload').click()" style="margin-bottom: 8px;">
+                            <i class="fas fa-image"></i> 上传背景图片
+                        </button>
+                        <button class="modal-btn secondary" onclick="resetBackground()">
+                            <i class="fas fa-undo"></i> 恢复默认背景
+                        </button>
+                        <div id="bgPreview" style="margin-top: 12px; width: 100%; height: 100px; background: #f0f0f0; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-light); font-size: 0.9rem;">
+                            背景图片预览
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <h3><i class="fas fa-eye-slash"></i> 隐藏的作业</h3>
+                    <div id="hiddenHomeworkList" style="max-height: 200px; overflow-y: auto;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="saveSettings()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const subjects = [];
+        let homeworks = [];
+        let currentSubject = 'all';
+        let currentFilter = 'all';
+        let userSettings = {
+            themeColor: '#3498db',
+            backgroundImage: '',
+            hiddenHomeworks: [],
+            homeworkOrder: []
+        };
+        let sortableInstance = null;
+
+        const DB_NAME = 'userHomeworkDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'backgrounds';
+        let db = null;
+        let idbInitialized = false;
+
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                try {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    
+                    request.onerror = (e) => {
+                        console.error('IndexedDB open error:', e);
+                        reject(request.error);
+                    };
+                    request.onsuccess = () => {
+                        db = request.result;
+                        idbInitialized = true;
+                        resolve(db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const database = event.target.result;
+                        if (!database.objectStoreNames.contains(STORE_NAME)) {
+                            database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        }
+                    };
+                } catch (err) {
+                    console.error('IndexedDB init error:', err);
+                    reject(err);
+                }
+            });
+        }
+
+        async function saveBackgroundToIDB(imageBlob) {
+            if (!db) {
+                await initIndexedDB();
+            }
+            
+            return new Promise((resolve, reject) => {
+                try {
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    
+                    const request = store.put({ 
+                        id: 'backgroundImage', 
+                        data: imageBlob,
+                        type: 'blob',
+                        lastModified: Date.now()
+                    });
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = (e) => {
+                        console.error('Save to IDB error:', e);
+                        reject(request.error);
+                    };
+                    
+                    transaction.oncomplete = () => resolve();
+                    transaction.onerror = (e) => {
+                        console.error('Transaction error:', e);
+                        reject(transaction.error);
+                    };
+                } catch (err) {
+                    console.error('Save error:', err);
+                    reject(err);
+                }
+            });
+        }
+
+        async function loadBackgroundFromIDB() {
+            if (!db) {
+                try {
+                    await initIndexedDB();
+                } catch (err) {
+                    console.error('Failed to init DB:', err);
+                    return null;
+                }
+            }
+            
+            return new Promise((resolve, reject) => {
+                try {
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.get('backgroundImage');
+                    
+                    request.onsuccess = () => {
+                        const result = request.result;
+                        if (result && result.data) {
+                            resolve(result.data);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    request.onerror = (e) => {
+                        console.error('Load from IDB error:', e);
+                        reject(request.error);
+                    };
+                } catch (err) {
+                    console.error('Load error:', err);
+                    resolve(null);
+                }
+            });
+        }
+
+        async function deleteBackgroundFromIDB() {
+            if (!db) return;
+            
+            return new Promise((resolve, reject) => {
+                try {
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.delete('backgroundImage');
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = (e) => {
+                        console.error('Delete from IDB error:', e);
+                        reject(request.error);
+                    };
+                } catch (err) {
+                    console.error('Delete error:', err);
+                    resolve();
+                }
+            });
+        }
+
+        function loadData() {
+            const subjectsData = localStorage.getItem('homeworkTracker_subjects');
+            if (subjectsData) {
+                subjects.length = 0;
+                subjects.push(...JSON.parse(subjectsData));
+            }
+
+            const homeworksData = localStorage.getItem('homeworkTracker_homeworks');
+            if (homeworksData) {
+                homeworks = JSON.parse(homeworksData);
+            }
+
+            loadUserSettings();
+            renderSubjectFilter();
+            renderHomeworkList();
+        }
+
+        async function loadUserSettings() {
+            const savedSettings = localStorage.getItem('userHomeworkSettings');
+            if (savedSettings) {
+                userSettings = JSON.parse(savedSettings);
+                applyTheme(userSettings.themeColor);
+            }
+            
+            try {
+                const bgBlob = await loadBackgroundFromIDB();
+                if (bgBlob) {
+                    const url = URL.createObjectURL(bgBlob);
+                    userSettings.backgroundImage = url;
+                    document.body.style.backgroundImage = `url('${url}')`;
+                    const bgPreview = document.getElementById('bgPreview');
+                    if (bgPreview) {
+                        bgPreview.style.backgroundImage = `url('${url}')`;
+                        bgPreview.textContent = '';
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load background:', err);
+            }
+        }
+
+        function saveUserSettings() {
+            localStorage.setItem('userHomeworkSettings', JSON.stringify(userSettings));
+        }
+
+        function applyTheme(color) {
+            userSettings.themeColor = color;
+            document.documentElement.style.setProperty('--primary-color', color);
+            
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('active');
+                if (opt.style.background === color || rgbToHex(opt.style.background) === color.toLowerCase()) {
+                    opt.classList.add('active');
+                }
+            });
+        }
+
+        function rgbToHex(rgb) {
+            if (rgb.startsWith('#')) return rgb.toLowerCase();
+            const result = rgb.match(/\d+/g);
+            if (!result) return rgb;
+            return '#' + result.slice(0, 3).map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+        }
+
+        async function handleBgUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    const blob = file;
+                    const url = URL.createObjectURL(blob);
+                    
+                    userSettings.backgroundImage = url;
+                    document.body.style.backgroundImage = `url('${url}')`;
+                    const bgPreview = document.getElementById('bgPreview');
+                    if (bgPreview) {
+                        bgPreview.style.backgroundImage = `url('${url}')`;
+                        bgPreview.textContent = '';
+                    }
+                    
+                    await saveBackgroundToIDB(blob);
+                    saveUserSettings();
+                } catch (err) {
+                    console.error('Failed to save background:', err);
+                    alert('背景图片保存失败: ' + err.message);
+                }
+            }
+        }
+
+        async function resetBackground() {
+            userSettings.backgroundImage = '';
+            document.body.style.backgroundImage = '';
+            const bgPreview = document.getElementById('bgPreview');
+            if (bgPreview) {
+                bgPreview.style.backgroundImage = '';
+                bgPreview.textContent = '背景图片预览';
+            }
+            
+            try {
+                await deleteBackgroundFromIDB();
+                saveUserSettings();
+            } catch (err) {
+                console.error('Failed to delete background:', err);
+            }
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+            renderHiddenHomeworkList();
+            applyTheme(userSettings.themeColor);
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function saveSettings() {
+            saveUserSettings();
+            closeSettings();
+        }
+
+        function renderHiddenHomeworkList() {
+            const list = document.getElementById('hiddenHomeworkList');
+            const hiddenHomeworks = homeworks.filter(hw => userSettings.hiddenHomeworks.includes(hw.id));
+            
+            if (hiddenHomeworks.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: var(--text-light); padding: 20px;">暂无隐藏的作业</div>';
+                return;
+            }
+
+            list.innerHTML = hiddenHomeworks.map(hw => {
+                const subject = subjects.find(s => s.id === hw.subjectId);
+                return `
+                    <div class="subject-edit-item" style="cursor: default;">
+                        <span style="flex: 1;">${hw.title}</span>
+                        <button class="modal-btn secondary btn-sm" onclick="unhideHomework('${hw.id}')" style="padding: 8px 12px;">
+                            <i class="fas fa-eye"></i> 显示
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleHomeworkVisibility(hwId, event) {
+            event.stopPropagation();
+            
+            const index = userSettings.hiddenHomeworks.indexOf(hwId);
+            if (index > -1) {
+                userSettings.hiddenHomeworks.splice(index, 1);
+            } else {
+                userSettings.hiddenHomeworks.push(hwId);
+            }
+            saveUserSettings();
+            renderHomeworkList();
+        }
+
+        function unhideHomework(hwId) {
+            const index = userSettings.hiddenHomeworks.indexOf(hwId);
+            if (index > -1) {
+                userSettings.hiddenHomeworks.splice(index, 1);
+                saveUserSettings();
+                renderHiddenHomeworkList();
+                renderHomeworkList();
+            }
+        }
+
+        function renderSubjectFilter() {
+            const filter = document.getElementById('subjectFilter');
+            let html = `
+                <div class="subject-item ${currentSubject === 'all' && currentFilter === 'all' ? 'active' : ''}" 
+                     onclick="filterBySubject('all', 'all')"
+                     style="${currentSubject === 'all' && currentFilter === 'all' ? 'background: #6c757d;' : ''}">
+                    全部
+                </div>
+                <div class="subject-item ${currentFilter === 'hidden' ? 'active' : ''}"
+                     onclick="filterBySubject('all', 'hidden')"
+                     style="${currentFilter === 'hidden' ? 'background: #e74c3c;' : ''}">
+                    <i class="fas fa-eye-slash"></i> 隐藏
+                </div>
+            `;
+
+            subjects.forEach(subject => {
+                html += `
+                    <div class="subject-item ${currentSubject === subject.id && currentFilter === 'all' ? 'active' : ''}"
+                         onclick="filterBySubject(${subject.id}, 'all')"
+                         style="${currentSubject === subject.id && currentFilter === 'all' ? 'background: ' + subject.color + ';' : ''}">
+                        ${subject.name}
+                    </div>
+                `;
+            });
+
+            filter.innerHTML = html;
+        }
+
+        function toggleSubjectFilter() {
+            document.getElementById('subjectFilter').classList.toggle('active');
+        }
+
+        function filterBySubject(subjectId, filterType) {
+            currentSubject = subjectId;
+            currentFilter = filterType;
+            
+            const subject = subjects.find(s => s.id === subjectId);
+            if (filterType === 'hidden') {
+                document.getElementById('filterLabel').textContent = '隐藏的作业';
+            } else {
+                document.getElementById('filterLabel').textContent = 
+                    subjectId === 'all' ? '全部作业' : (subject?.name || '全部作业');
+            }
+            
+            renderSubjectFilter();
+            renderHomeworkList();
+        }
+
+        function isOverdue(deadlineISO) {
+            const now = luxon.DateTime.now();
+            const deadline = luxon.DateTime.fromISO(deadlineISO);
+            return deadline < now;
+        }
+
+        function isNearDeadline(deadlineISO, hours = 24) {
+            const now = luxon.DateTime.now();
+            const deadline = luxon.DateTime.fromISO(deadlineISO);
+            const diff = deadline.diff(now, 'hours').hours;
+            return diff > 0 && diff <= hours;
+        }
+
+        function getFormattedDateTime(deadlineISO) {
+            const deadline = luxon.DateTime.fromISO(deadlineISO);
+            const now = luxon.DateTime.now();
+            
+            const diffDays = deadline.diff(now, 'days').days;
+            
+            if (Math.abs(diffDays) < 1) {
+                const timeStr = deadline.toFormat('HH:mm');
+                const isToday = deadline.hasSame(now, 'day');
+                const yesterday = now.minus({ days: 1 });
+                const tomorrow = now.plus({ days: 1 });
+                
+                if (isToday) {
+                    return `今天 ${timeStr}`;
+                } else if (deadline.hasSame(yesterday, 'day')) {
+                    return `昨天 ${timeStr}`;
+                } else if (deadline.hasSame(tomorrow, 'day')) {
+                    return `明天 ${timeStr}`;
+                }
+            }
+            
+            return deadline.toFormat('MM月dd日 HH:mm');
+        }
+
+        function getTimeRemaining(deadlineISO) {
+            const now = luxon.DateTime.now();
+            const deadline = luxon.DateTime.fromISO(deadlineISO);
+            const diff = deadline.diff(now, ['days', 'hours', 'minutes']);
+            
+            if (diff.toMillis() < 0) {
+                return '已过期';
+            }
+            
+            if (diff.days > 0) {
+                return `还剩 ${Math.round(diff.days)} 天`;
+            } else if (diff.hours > 0) {
+                return `还剩 ${Math.round(diff.hours)} 小时`;
+            } else {
+                return `还剩 ${Math.max(0, Math.round(diff.minutes))} 分钟`;
+            }
+        }
+
+        function parseMarkdown(text) {
+            if (!text) return '';
+            let result = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/~~(.*?)~~/g, '<del>$1</del>')
+                .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+                .replace(/^## (.*?)$/gm, '<h3 style="font-size:1.1rem">$1</h3>')
+                .replace(/^# (.*?)$/gm, '<h3 style="font-size:1.3rem">$1</h3>')
+                .replace(/^- (.*?)$/gm, '<li>$1</li>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/\n/g, '<br>');
+
+            if (result.includes('<li>')) {
+                result = result.replace(/(<li>.*?<\/li>)+/s, match => `<ul>${match}</ul>`);
+                result = result.replace(/<\/li><br><li>/g, '</li><li>');
+            }
+
+            return result;
+        }
+
+        function renderHomeworkList() {
+            const list = document.getElementById('homeworkList');
+            
+            let filteredHomeworks = [...homeworks];
+            
+            if (userSettings.homeworkOrder.length > 0) {
+                filteredHomeworks.sort((a, b) => {
+                    const indexA = userSettings.homeworkOrder.indexOf(a.id);
+                    const indexB = userSettings.homeworkOrder.indexOf(b.id);
+                    if (indexA === -1 && indexB === -1) return 0;
+                    if (indexA === -1) return 1;
+                    if (indexB === -1) return -1;
+                    return indexA - indexB;
+                });
+            }
+            
+            if (currentFilter === 'hidden') {
+                filteredHomeworks = filteredHomeworks.filter(hw => userSettings.hiddenHomeworks.includes(hw.id));
+            } else if (currentSubject !== 'all') {
+                filteredHomeworks = filteredHomeworks.filter(hw => hw.subjectId === currentSubject);
+            }
+            
+            if (currentFilter !== 'hidden') {
+                filteredHomeworks = filteredHomeworks.filter(hw => !userSettings.hiddenHomeworks.includes(hw.id));
+            }
+
+            if (filteredHomeworks.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard"></i>
+                        <h3>${currentFilter === 'hidden' ? '暂无隐藏的作业' : '暂无作业'}</h3>
+                        <p>${currentFilter === 'hidden' ? '隐藏的作业会显示在这里' : '等待老师布置作业...'}</p>
+                    </div>
+                `;
+                initSortable();
+                return;
+            }
+
+            list.innerHTML = filteredHomeworks.map(homework => {
+                const subject = subjects.find(s => s.id === homework.subjectId);
+                const subjectColor = subject ? subject.color : '#3498db';
+                const overdue = isOverdue(homework.deadlineISO);
+                const nearDeadline = isNearDeadline(homework.deadlineISO);
+                const deadlineClass = overdue ? 'urgent' : (nearDeadline ? 'warning' : '');
+                
+                const content = homework.contentMarkdown !== undefined 
+                    ? parseMarkdown(homework.contentMarkdown) 
+                    : (homework.content || '');
+
+                return `
+                    <div class="homework-card ${overdue ? 'urgent' : ''} ${userSettings.hiddenHomeworks.includes(homework.id) ? 'hidden-homework' : ''}" data-id="${homework.id}">
+                        <div class="btn-group">
+                            <button class="hide-btn ${userSettings.hiddenHomeworks.includes(homework.id) ? 'hidden' : ''}" 
+                                    onclick="toggleHomeworkVisibility('${homework.id}', event)">
+                                <i class="fas ${userSettings.hiddenHomeworks.includes(homework.id) ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                            </button>
+                            <div class="drag-handle">
+                                <i class="fas fa-arrows-alt"></i>
+                            </div>
+                        </div>
+                        <div class="homework-header">
+                            <span class="subject-badge" style="background: ${subjectColor};">
+                                <i class="fas fa-graduation-cap"></i>
+                                ${subject ? subject.name : '未分类'}
+                            </span>
+                        </div>
+                        <div class="homework-title">${homework.title}</div>
+                        <div class="homework-content">${content}</div>
+                        ${homework.images && homework.images.length > 0 ? `
+                            <div class="homework-images">
+                                ${homework.images.map(img => `
+                                    <img src="${img}" class="homework-image" onclick="openImageModal('${img}')">
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        <div class="deadline ${deadlineClass}">
+                            <i class="fas fa-clock"></i>
+                            <span>${homework.presetDeadlineName || '自定义时间'} (${getFormattedDateTime(homework.deadlineISO)})</span>
+                            <span style="margin-left: auto;">${getTimeRemaining(homework.deadlineISO)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            initSortable();
+        }
+
+        function initSortable() {
+            if (sortableInstance) {
+                sortableInstance.destroy();
+            }
+
+            const homeworkList = document.getElementById('homeworkList');
+            if (homeworkList) {
+                sortableInstance = new Sortable(homeworkList, {
+                    animation: 250,
+                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    handle: '.drag-handle',
+                    filter: '.empty-state',
+                    preventOnFilter: false,
+                    onStart: function(evt) {
+                        evt.item.classList.add('dragging');
+                    },
+                    onEnd: function(evt) {
+                        evt.item.classList.remove('dragging');
+                        saveSortOrder();
+                    }
+                });
+            }
+        }
+
+        function saveSortOrder() {
+            const homeworkList = document.getElementById('homeworkList');
+            const cards = homeworkList.querySelectorAll('.homework-card');
+            userSettings.homeworkOrder = Array.from(cards).map(card => card.dataset.id);
+            saveUserSettings();
+        }
+
+        function openImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.add('active');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'homeworkTracker_homeworks' || e.key === 'homeworkTracker_subjects') {
+                loadData();
+            }
+        });
+
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+
+        window.onload = async function() {
+            try {
+                await initIndexedDB();
+            } catch (err) {
+                console.error('Failed to initialize IndexedDB:', err);
+            }
+            loadData();
+        };
+    </script>
+</body>
+</html>

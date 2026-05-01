@@ -1,0 +1,2386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>手机作业登记本</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --primary-color: #e74c3c;
+            --secondary-color: #27ae60;
+            --accent-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --text-color: #2c3e50;
+            --text-light: #7f8c8d;
+            --border-radius: 16px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --card-opacity: 0.9;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.5s ease-out;
+            margin-bottom: 20px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-left h1 i {
+            color: var(--primary-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .settings-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .settings-btn:hover {
+            color: var(--text-color);
+            transform: rotate(45deg);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .primary-btn, .secondary-btn, .danger-btn, .info-btn, .warning-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            min-height: 44px;
+        }
+
+        .btn-sm {
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            min-height: 36px !important;
+            border-radius: 10px !important;
+        }
+
+        .primary-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .secondary-btn {
+            background: #f0f0f0;
+            color: var(--text-color);
+        }
+
+        .secondary-btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .danger-btn {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .danger-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .info-btn {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .info-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .subject-filter-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .subject-filter-toggle:hover {
+            background: #e9ecef;
+        }
+
+        .subject-filter-toggle i {
+            transition: transform 0.3s ease;
+        }
+
+        .subject-filter-toggle.collapsed i {
+            transform: rotate(-90deg);
+        }
+
+        .subject-list {
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: 16px;
+            display: none;
+            margin-bottom: 12px;
+        }
+
+        .subject-list.expanded {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .subject-list h3 {
+            font-size: 1rem;
+            color: var(--text-color);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subject-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .subject-item:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+
+        .subject-item.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        #currentSubject {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .homework-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--primary-color);
+            position: relative;
+            opacity: var(--card-opacity);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: grab;
+        }
+
+        .homework-card:active {
+            cursor: grabbing;
+            transform: scale(1.02);
+        }
+
+        .homework-card.dragging {
+            opacity: 0.5;
+            transform: rotate(3deg);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .homework-card.drag-over {
+            border: 2px dashed var(--primary-color);
+            transform: translateY(-5px);
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #c8ebfb;
+        }
+
+        .sortable-chosen {
+            opacity: 0.8;
+            transform: rotate(1deg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .sortable-drag {
+            opacity: 0.9;
+            transform: rotate(3deg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .homework-card.overdue {
+            border-left-color: var(--danger-color);
+        }
+
+        .homework-card.urgent {
+            border-left-color: var(--warning-color);
+        }
+
+        .homework-header h3 {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            margin-right: 50px;
+            margin-bottom: 8px;
+        }
+
+        .subject-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .homework-content {
+            color: var(--text-color);
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .deadline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .deadline.overdue {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .deadline.urgent {
+            color: var(--warning-color);
+            font-weight: 600;
+        }
+
+        .time-remaining {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-left: 8px;
+        }
+
+        .homework-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h2, .modal-header h3 {
+            font-size: 1.3rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--text-color);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #2980b9;
+        }
+
+        .modal-btn.secondary {
+            background: #f0f0f0;
+            color: var(--text-color);
+        }
+
+        .modal-btn.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .editor-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .toolbar-btn {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: #f0f0f0;
+            border-color: var(--primary-color);
+        }
+
+        .content-editor-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .editor-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        @media (max-width: 600px) {
+            .editor-split {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .editor-textarea {
+            min-height: 200px;
+            padding: 16px;
+            font-size: 15px;
+            line-height: 1.6;
+            outline: none;
+            border: none;
+            resize: vertical;
+            font-family: inherit;
+            background: #fafafa;
+        }
+
+        .editor-textarea:focus {
+            background: white;
+        }
+
+        .editor-preview-label {
+            grid-column: 1 / -1;
+            padding: 8px 16px;
+            background: #f0f0f0;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 600;
+            border-left: 1px solid #e0e0e0;
+        }
+
+        .editor-preview {
+            min-height: 200px;
+            padding: 16px;
+            font-size: 15px;
+            line-height: 1.6;
+            background: white;
+            border-left: 1px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .editor-preview h3 {
+            font-size: 1.2rem;
+            margin: 0 0 8px 0;
+            color: var(--text-color);
+        }
+
+        .editor-preview ul {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+
+        .editor-preview li {
+            margin: 4px 0;
+        }
+
+        .editor-preview code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .toolbar-btn.danger {
+            color: var(--danger-color);
+            margin-left: auto;
+        }
+
+        .toolbar-btn.danger:hover {
+            background: #fff0f0;
+            border-color: var(--danger-color);
+        }
+
+        .editor-area {
+            min-height: 120px;
+            padding: 16px;
+            font-size: 15px;
+            line-height: 1.6;
+            outline: none;
+            overflow-y: auto;
+        }
+
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .image-preview-item {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .delete-image-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .delete-image-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .deadline-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .deadline-option {
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .deadline-option:hover {
+            border-color: var(--primary-color);
+            background: #f8f9fa;
+        }
+
+        .deadline-option.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .deadline-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .deadline-type-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+            font-weight: 500;
+        }
+
+        .deadline-type-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        .deadline-type-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .datetime-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .datetime-input {
+            flex: 1;
+        }
+
+        .preset-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .preset-option {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .preset-option:hover {
+            border-color: var(--primary-color);
+            background: #f8f9fa;
+        }
+
+        .preset-option.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .settings-section {
+            margin-bottom: 24px;
+        }
+
+        .settings-title {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: var(--text-color);
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+            font-weight: 600;
+        }
+
+        .subject-edit-item, .preset-edit-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .background-preview {
+            width: 100%;
+            height: 120px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            margin-top: 12px;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .drag-handle {
+            color: #aaa;
+            cursor: move;
+            padding: 8px;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            transition: all 0.2s ease;
+            font-size: 1.3rem;
+        }
+
+        .drag-handle:hover {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .drag-handle-area {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 16px;
+            z-index: 2;
+        }
+
+        .homework-card .drag-handle-area:hover ~ .homework-header .drag-handle {
+            color: var(--primary-color);
+        }
+
+        .homework-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-input {
+            width: 70px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .theme-preset-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .theme-preset {
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-preset:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .opacity-slider-container {
+            margin-top: 12px;
+        }
+
+        .opacity-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .opacity-value {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .color-preview-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 20px;
+            }
+
+            .header-left h1 {
+                font-size: 1.3rem;
+            }
+
+            .preset-options {
+                grid-template-columns: 1fr;
+            }
+
+            .theme-preset-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="header-left">
+                    <h1><i class="fas fa-book"></i> 作业登记本</h1>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="settings-btn" onclick="showThemeSettingsModal()" title="主题设置">
+                        <i class="fas fa-paint-brush"></i>
+                    </button>
+                    <button class="settings-btn" onclick="showSettingsModal()" title="系统设置">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <button class="primary-btn btn-sm" onclick="showAddHomeworkModal()">
+                    <i class="fas fa-plus"></i> 添加作业
+                </button>
+                <button class="secondary-btn btn-sm" onclick="showAddSubjectModal()">
+                    <i class="fas fa-graduation-cap"></i> 添加学科
+                </button>
+                <button class="danger-btn btn-sm" onclick="deleteOverdueHomeworks()">
+                    <i class="fas fa-trash-alt"></i> 删除已逾期
+                </button>
+                <button class="info-btn btn-sm" onclick="showRecycleBinModal()">
+                    <i class="fas fa-recycle"></i> 回收站
+                </button>
+            </div>
+            
+            <h3 id="currentSubject">所有作业</h3>
+            
+            <div class="subject-filter-toggle" onclick="toggleSubjectFilter()" id="subjectFilterToggle">
+                <i class="fas fa-chevron-down"></i>
+                <span>学科筛选</span>
+            </div>
+            
+            <div class="subject-list" id="subjectListContainer">
+                <h3><i class="fas fa-th-list"></i> 学科筛选</h3>
+                <ul id="subjectList" style="list-style: none; margin-top: 12px;"></ul>
+            </div>
+            
+            <div id="homeworkList"></div>
+        </div>
+    </div>
+    
+    <div id="homeworkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> 添加新作业</h3>
+                <button class="close-btn" onclick="closeModal('homeworkModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="homeworkForm" onsubmit="return false;">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>学科 *</label>
+                        <select id="subjectSelect" class="form-control" required>
+                            <option value="">请选择学科</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>作业标题 *</label>
+                        <input type="text" id="homeworkTitle" class="form-control" 
+                               placeholder="例如：数学课本第25页习题" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>作业内容 *</label>
+                        <div class="content-editor-container">
+                            <div class="editor-toolbar" id="editorToolbar">
+                                <button type="button" class="toolbar-btn" onclick="insertMarkdown('**', '**')" title="粗体">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertMarkdown('*', '*')" title="斜体">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertMarkdown('~~', '~~')" title="删除线">
+                                    <i class="fas fa-strikethrough"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertMarkdown('### ', '')" title="标题">
+                                    <i class="fas fa-heading"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertMarkdown('- ', '')" title="列表">
+                                    <i class="fas fa-list-ul"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="insertMarkdown('`', '`')" title="代码">
+                                    <i class="fas fa-code"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn danger" onclick="clearContent()" title="清空内容">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            <div class="editor-split">
+                                <textarea id="homeworkContent" class="editor-textarea" placeholder="在此输入作业内容...支持简单Markdown格式：**粗体**、*斜体*、~~删除线~~、### 标题、- 列表"></textarea>
+                                <div class="editor-preview-label"><i class="fas fa-eye"></i> 预览</div>
+                                <div id="contentPreview" class="editor-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>添加图片（最多3张）</label>
+                        <input type="file" id="imageUpload" class="form-control" 
+                               accept="image/*" multiple onchange="handleImageUpload(event)">
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>截止时间 *</label>
+                        <div class="deadline-type-selector">
+                            <button type="button" class="deadline-type-btn active" onclick="switchDeadlineType('preset')" id="presetTypeBtn">预设时间</button>
+                            <button type="button" class="deadline-type-btn" onclick="switchDeadlineType('custom')" id="customTypeBtn">指定时间</button>
+                        </div>
+                        
+                        <div id="presetDeadlineOptions" class="preset-options">
+                            <div class="preset-option" onclick="selectPresetDeadline('today_noon')">今天中午(12:00)</div>
+                            <div class="preset-option" onclick="selectPresetDeadline('today_evening')">今天晚上(20:00)</div>
+                            <div class="preset-option" onclick="selectPresetDeadline('tomorrow_morning')">明天早上(8:00)</div>
+                            <div class="preset-option" onclick="selectPresetDeadline('tomorrow_evening')">明天晚上(20:00)</div>
+                            <div class="preset-option" onclick="selectPresetDeadline('day_after_tomorrow')">后天(20:00)</div>
+                            <div class="preset-option" onclick="selectPresetDeadline('weekend_morning')">周六早上(10:00)</div>
+                            <div class="preset-option" onclick="selectPresetDeadline('weekend_evening')">周天晚上(20:00)</div>
+                            <div class="preset-option" onclick="selectPresetDeadline('next_monday')">下周一(20:00)</div>
+                        </div>
+                        
+                        <div id="customDeadlineOptions" style="display: none;">
+                            <div class="datetime-input-group">
+                                <input type="date" id="deadlineDate" class="form-control datetime-input">
+                                <input type="time" id="deadlineTime" class="form-control datetime-input" value="20:00">
+                            </div>
+                        </div>
+                        
+                        <div id="selectedDeadlineInfo" style="margin-top: 12px; font-size: 14px; color: var(--text-light);">
+                            <!-- 截止时间信息会在这里显示 -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="modal-btn secondary" onclick="closeModal('homeworkModal')">
+                        取消
+                    </button>
+                    <button type="button" class="modal-btn primary" onclick="saveHomework()">
+                        保存作业
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="subjectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-graduation-cap"></i> 添加新学科</h3>
+                <button class="close-btn" onclick="closeModal('subjectModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="subjectForm" onsubmit="return false;">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>学科名称 *</label>
+                        <input type="text" id="newSubjectName" class="form-control" 
+                               placeholder="例如：物理" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>学科颜色</label>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <input type="color" id="subjectColor" value="#3498db" class="form-control" 
+                                   style="width: 60px; height: 50px; padding: 0; cursor: pointer;">
+                            <div class="color-preview-box" id="subjectColorPreview" 
+                                 style="background: #3498db;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="modal-btn secondary" onclick="closeModal('subjectModal')">
+                        取消
+                    </button>
+                    <button type="button" class="modal-btn primary" onclick="saveSubject()">
+                        添加学科
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="themeSettingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-paint-brush"></i> 主题设置</h2>
+                <button class="close-btn" onclick="closeModal('themeSettingsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h4 class="settings-title"><i class="fas fa-palette"></i> 主题颜色</h4>
+                    <div class="form-group">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <input type="color" id="themeColor" class="form-control" 
+                                   style="width: 60px; height: 50px; padding: 0; cursor: pointer;"
+                                   onchange="changeThemeColor(this.value)">
+                            <div class="color-preview-box" id="themeColorPreview" 
+                                 style="background: #3498db;"></div>
+                        </div>
+                        
+                        <label>预设主题</label>
+                        <div class="theme-preset-container">
+                            <div class="theme-preset" style="background: #f97dc1; color: white;" onclick="applyTheme('#f97dc1')">橘橙</div>
+                            <div class="theme-preset" style="background: #945833; color: white;" onclick="applyTheme('#945833')">淡咖啡</div>
+                            <div class="theme-preset" style="background: #f1ca17; color: black;" onclick="applyTheme('#f1ca17')">柚黄</div>
+                            <div class="theme-preset" style="background: #2c9678; color: white;" onclick="applyTheme('#2c9678')">青矾绿</div>
+                            <div class="theme-preset" style="background: #2983bb; color: white;" onclick="applyTheme('#2983bb')">潮蓝</div>
+                            <div class="theme-preset" style="background: #1772b4; color: white;" onclick="applyTheme('#1772b4')">群青</div>
+                            <div class="theme-preset" style="background: #f1908c; color: black;" onclick="applyTheme('#f1908c')">榴子红</div>
+                            <div class="theme-preset" style="background: #3498db; color: white;" onclick="applyTheme('#3498db')">默认蓝</div>
+                            <div class="theme-preset" style="background: #2ecc71; color: white;" onclick="applyTheme('#2ecc71')">翠绿</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group opacity-slider-container">
+                        <label>作业卡片透明度: <span id="opacityValue">90%</span></label>
+                        <input type="range" id="cardOpacitySlider" class="opacity-slider" 
+                               min="60" max="100" value="90" oninput="updateCardOpacity(this.value)">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-light); margin-top: 8px;">
+                            <span>60%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>背景图片（自动适应手机屏幕）</label>
+                        <input type="file" id="bgImageUpload" class="form-control" 
+                               accept="image/*" onchange="handleBackgroundImageUpload(event)">
+                        <div id="bgPreview" class="background-preview">
+                            背景图片预览
+                        </div>
+                        <button type="button" class="secondary-btn btn-sm" onclick="resetBackground()" 
+                                style="margin-top: 12px; width: 100%;">
+                            <i class="fas fa-times"></i> 清除背景
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn secondary" onclick="closeModal('themeSettingsModal')">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> 系统设置</h2>
+                <button class="close-btn" onclick="closeModal('settingsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h4 class="settings-title"><i class="fas fa-graduation-cap"></i> 学科管理</h4>
+                    <div id="subjectEditList"></div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4 class="settings-title"><i class="fas fa-clock"></i> 预设截止时间管理</h4>
+                    <div id="presetSettings">
+                        <!-- 预设截止时间管理会在这里显示 -->
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4 class="settings-title"><i class="fas fa-database"></i> 数据管理</h4>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button class="primary-btn btn-sm" onclick="backupData()">
+                            <i class="fas fa-download"></i> 备份数据
+                        </button>
+                        <label class="secondary-btn btn-sm" style="text-align: center; cursor: pointer;">
+                            <i class="fas fa-upload"></i> 恢复数据
+                            <input type="file" id="restoreFile" accept=".json" style="display: none;" 
+                                   onchange="restoreData(event)">
+                        </label>
+                        <button class="danger-btn btn-sm" onclick="clearAllData()">
+                            <i class="fas fa-trash"></i> 清除所有数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn secondary" onclick="closeModal('settingsModal')">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="recycleBinModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-recycle"></i> 回收站</h2>
+                <button class="close-btn" onclick="closeModal('recycleBinModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px; font-size: 0.9rem; color: var(--text-light);">
+                    <i class="fas fa-info-circle"></i> 保留最近删除的10个作业
+                </div>
+                <div id="recycleBinList"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn danger" onclick="emptyRecycleBin()">
+                    <i class="fas fa-trash"></i> 清空回收站
+                </button>
+                <button type="button" class="modal-btn secondary" onclick="closeModal('recycleBinModal')">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class HomeworkTracker {
+            constructor() {
+                this.currentHomeworkId = null;
+                this.currentSubject = 'all';
+                this.subjects = [];
+                this.homeworks = [];
+                this.recycleBin = [];
+                this.selectedDeadline = null;
+                this.deadlineType = 'preset';
+                this.subjectFilterCollapsed = true;
+                
+                this.presetDeadlines = {
+                    'today_noon': { 
+                        name: '今天中午(12:00)', 
+                        hour: 12, 
+                        minute: 0, 
+                        daysOffset: 0 
+                    },
+                    'today_evening': { 
+                        name: '今天晚上(20:00)', 
+                        hour: 20, 
+                        minute: 0, 
+                        daysOffset: 0 
+                    },
+                    'tomorrow_morning': { 
+                        name: '明天早上(8:00)', 
+                        hour: 8, 
+                        minute: 0, 
+                        daysOffset: 1 
+                    },
+                    'tomorrow_evening': { 
+                        name: '明天晚上(20:00)', 
+                        hour: 20, 
+                        minute: 0, 
+                        daysOffset: 1 
+                    },
+                    'day_after_tomorrow': { 
+                        name: '后天(20:00)', 
+                        hour: 20, 
+                        minute: 0, 
+                        daysOffset: 2 
+                    },
+                    'weekend_morning': { 
+                        name: '周六早上(10:00)', 
+                        hour: 10, 
+                        minute: 0, 
+                        daysOffset: this.getDaysToNextSaturday() 
+                    },
+                    'weekend_evening': { 
+                        name: '周天晚上(20:00)', 
+                        hour: 20, 
+                        minute: 0, 
+                        daysOffset: this.getDaysToNextSunday() 
+                    },
+                    'next_monday': { 
+                        name: '下周一(20:00)', 
+                        hour: 20, 
+                        minute: 0, 
+                        daysOffset: this.getDaysToNextMonday() 
+                    }
+                };
+                
+                this.defaultSubjects = [
+                    { id: 1, name: '语文', color: '#3498db' },
+                    { id: 2, name: '数学', color: '#2ecc71' },
+                    { id: 3, name: '英语', color: '#e74c3c' },
+                    { id: 4, name: '物理', color: '#9b59b6' },
+                    { id: 5, name: '化学', color: '#f39c12' }
+                ];
+                
+                this.sortableInstance = null;
+                
+                this.init();
+            }
+            
+            getDaysToNextSaturday() {
+                const now = luxon.DateTime.now();
+                const currentWeekday = now.weekday;
+                return currentWeekday <= 6 ? 6 - currentWeekday : 6 + (7 - currentWeekday);
+            }
+            
+            getDaysToNextSunday() {
+                const now = luxon.DateTime.now();
+                const currentWeekday = now.weekday;
+                return currentWeekday <= 7 ? 7 - currentWeekday : 7;
+            }
+            
+            getDaysToNextMonday() {
+                const now = luxon.DateTime.now();
+                const currentWeekday = now.weekday;
+                return currentWeekday <= 1 ? 8 - currentWeekday : 8 - currentWeekday;
+            }
+            
+            calculatePresetDeadline(presetId) {
+                const preset = this.presetDeadlines[presetId];
+                if (!preset) return null;
+                
+                const now = luxon.DateTime.now();
+                let deadline = now.plus({ days: preset.daysOffset })
+                    .set({ hour: preset.hour, minute: preset.minute, second: 0, millisecond: 0 });
+                
+                return deadline.toISO();
+            }
+            
+            getPresetNameFromDeadline(deadlineISO) {
+                const deadline = luxon.DateTime.fromISO(deadlineISO);
+                const now = luxon.DateTime.now();
+                
+                for (const [presetId, preset] of Object.entries(this.presetDeadlines)) {
+                    const presetDeadline = now.plus({ days: preset.daysOffset })
+                        .set({ hour: preset.hour, minute: preset.minute, second: 0, millisecond: 0 });
+                    
+                    if (Math.abs(deadline.diff(presetDeadline, 'minutes').minutes) < 1) {
+                        return preset.name;
+                    }
+                }
+                
+                return '自定义时间';
+            }
+            
+            formatDeadlineDisplay(deadlineISO) {
+                const deadline = luxon.DateTime.fromISO(deadlineISO);
+                const now = luxon.DateTime.now();
+                
+                if (deadline < now) {
+                    return '<span class="overdue">已逾期</span>';
+                }
+                
+                const diff = deadline.diff(now, ['days', 'hours', 'minutes']);
+                
+                if (diff.days > 0) {
+                    return `剩余${diff.days}天${diff.hours}小时`;
+                } else if (diff.hours > 0) {
+                    return `剩余${diff.hours}小时${Math.floor(diff.minutes)}分钟`;
+                } else {
+                    return `剩余${Math.floor(diff.minutes)}分钟`;
+                }
+            }
+            
+            isOverdue(deadlineISO) {
+                if (!deadlineISO) return false;
+                const deadline = luxon.DateTime.fromISO(deadlineISO);
+                const now = luxon.DateTime.now();
+                return deadline < now;
+            }
+            
+            isUrgent(deadlineISO) {
+                if (!deadlineISO) return false;
+                const deadline = luxon.DateTime.fromISO(deadlineISO);
+                const now = luxon.DateTime.now();
+                const diff = deadline.diff(now, 'hours').hours;
+                return diff > 0 && diff <= 24;
+            }
+            
+            getDeadlineStatus(deadlineISO) {
+                if (this.isOverdue(deadlineISO)) return 'overdue';
+                if (this.isUrgent(deadlineISO)) return 'urgent';
+                return 'normal';
+            }
+            
+            getFormattedDateTime(deadlineISO) {
+                if (!deadlineISO) return '';
+                const deadline = luxon.DateTime.fromISO(deadlineISO);
+                return deadline.toFormat('yyyy-MM-dd HH:mm');
+            }
+            
+            init() {
+                this.loadData();
+                this.initEventListeners();
+                this.renderSubjects();
+                this.renderHomeworkList();
+                this.loadSettings();
+                this.startDeadlineTimer();
+            }
+            
+            loadData() {
+                const subjectsData = localStorage.getItem('homeworkTracker_subjects');
+                this.subjects = subjectsData ? JSON.parse(subjectsData) : this.defaultSubjects;
+                
+                const homeworksData = localStorage.getItem('homeworkTracker_homeworks');
+                this.homeworks = homeworksData ? JSON.parse(homeworksData) : [];
+                
+                const recycleBinData = localStorage.getItem('homeworkTracker_recycleBin');
+                this.recycleBin = recycleBinData ? JSON.parse(recycleBinData) : [];
+                
+                const presetDeadlinesData = localStorage.getItem('homeworkTracker_presetDeadlines');
+                if (presetDeadlinesData) {
+                    this.presetDeadlines = JSON.parse(presetDeadlinesData);
+                }
+                
+                this.renderSubjectSelect();
+            }
+            
+            loadSettings() {
+                const themeSettings = localStorage.getItem('homeworkTracker_themeSettings');
+                if (themeSettings) {
+                    const parsedSettings = JSON.parse(themeSettings);
+                    
+                    if (parsedSettings.themeColor) {
+                        this.applyThemeColor(parsedSettings.themeColor);
+                        document.getElementById('themeColor').value = parsedSettings.themeColor;
+                        document.getElementById('themeColorPreview').style.backgroundColor = parsedSettings.themeColor;
+                    }
+                    
+                    if (parsedSettings.cardOpacity) {
+                        this.updateCardOpacity(parsedSettings.cardOpacity);
+                        document.getElementById('cardOpacitySlider').value = parsedSettings.cardOpacity;
+                        document.getElementById('opacityValue').textContent = `${parsedSettings.cardOpacity}%`;
+                    } else {
+                        this.updateCardOpacity(90);
+                        document.getElementById('cardOpacitySlider').value = 90;
+                        document.getElementById('opacityValue').textContent = '90%';
+                    }
+                    
+                    if (parsedSettings.backgroundImage) {
+                        document.body.style.backgroundImage = `url('${parsedSettings.backgroundImage}')`;
+                        document.getElementById('bgPreview').style.backgroundImage = `url('${parsedSettings.backgroundImage}')`;
+                        document.getElementById('bgPreview').textContent = '';
+                    }
+                } else {
+                    this.updateCardOpacity(90);
+                    document.getElementById('cardOpacitySlider').value = 90;
+                    document.getElementById('opacityValue').textContent = '90%';
+                }
+                
+                const filterState = localStorage.getItem('homeworkTracker_filterCollapsed');
+                this.subjectFilterCollapsed = filterState !== 'false';
+                this.updateSubjectFilterUI();
+            }
+            
+            saveData() {
+                localStorage.setItem('homeworkTracker_subjects', JSON.stringify(this.subjects));
+                localStorage.setItem('homeworkTracker_homeworks', JSON.stringify(this.homeworks));
+                localStorage.setItem('homeworkTracker_recycleBin', JSON.stringify(this.recycleBin));
+                localStorage.setItem('homeworkTracker_presetDeadlines', JSON.stringify(this.presetDeadlines));
+            }
+            
+            saveThemeSettings() {
+                const themeSettings = {
+                    themeColor: document.getElementById('themeColor').value,
+                    cardOpacity: document.getElementById('cardOpacitySlider').value,
+                    backgroundImage: document.body.style.backgroundImage.replace('url("', '').replace('")', '')
+                };
+                localStorage.setItem('homeworkTracker_themeSettings', JSON.stringify(themeSettings));
+            }
+            
+            initEventListeners() {
+                document.getElementById('subjectColor').addEventListener('change', (e) => {
+                    document.getElementById('subjectColorPreview').style.backgroundColor = e.target.value;
+                });
+                
+                document.getElementById('themeColor').addEventListener('change', (e) => {
+                    this.applyThemeColor(e.target.value);
+                    this.saveThemeSettings();
+                });
+                
+                document.getElementById('deadlineDate').addEventListener('change', () => this.updateCustomDeadlineInfo());
+                document.getElementById('deadlineTime').addEventListener('change', () => this.updateCustomDeadlineInfo());
+            }
+            
+            toggleSubjectFilter() {
+                this.subjectFilterCollapsed = !this.subjectFilterCollapsed;
+                this.updateSubjectFilterUI();
+                localStorage.setItem('homeworkTracker_filterCollapsed', this.subjectFilterCollapsed);
+            }
+            
+            updateSubjectFilterUI() {
+                const toggle = document.getElementById('subjectFilterToggle');
+                const container = document.getElementById('subjectListContainer');
+                
+                if (this.subjectFilterCollapsed) {
+                    toggle.classList.add('collapsed');
+                    container.classList.remove('expanded');
+                } else {
+                    toggle.classList.remove('collapsed');
+                    container.classList.add('expanded');
+                }
+            }
+            
+            applyThemeColor(color) {
+                document.documentElement.style.setProperty('--primary-color', color);
+                document.getElementById('themeColorPreview').style.backgroundColor = color;
+            }
+            
+            updateCardOpacity(value) {
+                const opacity = value / 100;
+                document.documentElement.style.setProperty('--card-opacity', opacity);
+                document.getElementById('opacityValue').textContent = `${value}%`;
+                this.saveThemeSettings();
+            }
+            
+            startDeadlineTimer() {
+                setInterval(() => {
+                    this.renderHomeworkList();
+                }, 60000);
+            }
+            
+            renderSubjects() {
+                const subjectList = document.getElementById('subjectList');
+                subjectList.innerHTML = '';
+                
+                const allItem = document.createElement('li');
+                allItem.className = `subject-item ${this.currentSubject === 'all' ? 'active' : ''}`;
+                allItem.innerHTML = '<i class="fas fa-list"></i> 所有作业';
+                allItem.onclick = () => this.filterBySubject('all');
+                subjectList.appendChild(allItem);
+                
+                this.subjects.forEach(subject => {
+                    const subjectItem = document.createElement('li');
+                    subjectItem.className = `subject-item ${this.currentSubject === subject.id ? 'active' : ''}`;
+                    subjectItem.innerHTML = `
+                        <i class="fas fa-book" style="color: ${subject.color}"></i> ${subject.name}
+                    `;
+                    subjectItem.onclick = () => this.filterBySubject(subject.id);
+                    subjectList.appendChild(subjectItem);
+                });
+            }
+            
+            renderSubjectSelect() {
+                const subjectSelect = document.getElementById('subjectSelect');
+                subjectSelect.innerHTML = '<option value="">请选择学科</option>';
+                
+                this.subjects.forEach(subject => {
+                    const option = document.createElement('option');
+                    option.value = subject.id;
+                    option.textContent = subject.name;
+                    subjectSelect.appendChild(option);
+                });
+            }
+            
+            renderHomeworkList() {
+                const homeworkList = document.getElementById('homeworkList');
+                const currentSubjectEl = document.getElementById('currentSubject');
+                
+                let filteredHomeworks = this.homeworks;
+                if (this.currentSubject !== 'all') {
+                    filteredHomeworks = this.homeworks.filter(hw => hw.subjectId === this.currentSubject);
+                    const subject = this.subjects.find(s => s.id === this.currentSubject);
+                    currentSubjectEl.textContent = subject ? `${subject.name} 作业` : '所有作业';
+                } else {
+                    currentSubjectEl.textContent = '所有作业';
+                }
+                
+                if (filteredHomeworks.length === 0) {
+                    homeworkList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h3>暂无作业</h3>
+                            <p>点击"添加作业"按钮开始记录作业</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                homeworkList.innerHTML = '';
+                filteredHomeworks.forEach(homework => {
+                    const subject = this.subjects.find(s => s.id === homework.subjectId);
+                    const homeworkCard = this.createHomeworkCard(homework, subject);
+                    homeworkList.appendChild(homeworkCard);
+                });
+                
+                this.initSortable();
+            }
+            
+            createHomeworkCard(homework, subject) {
+                const card = document.createElement('div');
+                card.className = 'homework-card';
+                card.dataset.id = homework.id;
+                
+                const subjectColor = subject ? subject.color : '#3498db';
+                const deadlineStatus = this.getDeadlineStatus(homework.deadlineISO);
+                const deadlineClass = deadlineStatus === 'overdue' ? 'overdue' : deadlineStatus === 'urgent' ? 'urgent' : '';
+                
+                if (deadlineStatus === 'overdue') {
+                    card.classList.add('overdue');
+                } else if (deadlineStatus === 'urgent') {
+                    card.classList.add('urgent');
+                }
+                
+                const displayName = homework.presetDeadlineName || this.getPresetNameFromDeadline(homework.deadlineISO);
+                const formattedTime = this.getFormattedDateTime(homework.deadlineISO);
+                const timeRemaining = this.formatDeadlineDisplay(homework.deadlineISO);
+                
+                card.innerHTML = `
+                    <div class="drag-handle-area">
+                        <div class="drag-handle">
+                            <i class="fas fa-arrows-alt"></i>
+                        </div>
+                    </div>
+                    <div class="homework-header">
+                        <span class="subject-badge" style="background-color: ${subjectColor}; color: white;">
+                            ${subject ? subject.name : '未知学科'}
+                        </span>
+                        <h3>${this.escapeHtml(homework.title)}</h3>
+                    </div>
+                    
+                    <div class="homework-content">
+                        ${homework.content}
+                        ${homework.images && homework.images.length > 0 ? 
+                          homework.images.map(img => `
+                            <div style="margin: 12px 0;">
+                                <img src="${img}" style="max-width: 100%; border-radius: 10px;">
+                            </div>
+                          `).join('') : ''}
+                    </div>
+                    
+                    <div class="deadline ${deadlineClass}">
+                        <i class="fas fa-clock"></i>
+                        <span>${displayName} (${formattedTime})</span>
+                        <span class="time-remaining">${timeRemaining}</span>
+                    </div>
+                    
+                    <div class="homework-actions">
+                        <button class="secondary-btn btn-sm" onclick="homeworkTracker.editHomework('${homework.id}')">
+                            <i class="fas fa-edit"></i> 编辑
+                        </button>
+                        <button class="danger-btn btn-sm" onclick="homeworkTracker.deleteHomework('${homework.id}')">
+                            <i class="fas fa-trash"></i> 删除
+                        </button>
+                    </div>
+                `;
+                
+                return card;
+            }
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            filterBySubject(subjectId) {
+                this.currentSubject = subjectId;
+                
+                document.querySelectorAll('.subject-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+                this.renderHomeworkList();
+            }
+            
+            initSortable() {
+                if (this.sortableInstance) {
+                    this.sortableInstance.destroy();
+                }
+                
+                const homeworkList = document.getElementById('homeworkList');
+                if (homeworkList) {
+                    this.sortableInstance = new Sortable(homeworkList, {
+                        animation: 250,
+                        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                        ghostClass: 'sortable-ghost',
+                        chosenClass: 'sortable-chosen',
+                        dragClass: 'sortable-drag',
+                        handle: '.drag-handle-area',
+                        filter: '.empty-state',
+                        preventOnFilter: false,
+                        onStart: (evt) => {
+                            evt.item.classList.add('dragging');
+                        },
+                        onEnd: (evt) => {
+                            evt.item.classList.remove('dragging');
+                            this.saveSortOrder();
+                        }
+                    });
+                }
+            }
+            
+            saveSortOrder() {
+                const homeworkList = document.getElementById('homeworkList');
+                const cards = homeworkList.querySelectorAll('.homework-card');
+                const newOrder = Array.from(cards).map(card => card.dataset.id);
+                
+                const newHomeworks = [];
+                newOrder.forEach(id => {
+                    const homework = this.homeworks.find(hw => hw.id == id);
+                    if (homework) {
+                        newHomeworks.push(homework);
+                    }
+                });
+                
+                this.homeworks = newHomeworks;
+                this.saveData();
+            }
+            
+            showAddHomeworkModal() {
+                this.currentHomeworkId = null;
+                document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle"></i> 添加新作业';
+                document.getElementById('homeworkTitle').value = '';
+                document.getElementById('homeworkContent').value = '';
+                document.getElementById('contentPreview').innerHTML = '';
+                document.getElementById('imagePreview').innerHTML = '';
+                this.selectedDeadline = null;
+                this.deadlineType = 'preset';
+                this.switchDeadlineType('preset');
+                document.getElementById('selectedDeadlineInfo').textContent = '';
+                
+                this.initEditor();
+                document.getElementById('homeworkModal').classList.add('active');
+            }
+            
+            editHomework(id) {
+                const homework = this.homeworks.find(hw => hw.id == id);
+                if (!homework) return;
+                
+                this.currentHomeworkId = id;
+                document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> 编辑作业';
+                document.getElementById('homeworkTitle').value = homework.title;
+                
+                if (homework.contentMarkdown !== undefined) {
+                    document.getElementById('homeworkContent').value = homework.contentMarkdown;
+                } else {
+                    document.getElementById('homeworkContent').value = '';
+                }
+                
+                document.getElementById('subjectSelect').value = homework.subjectId;
+                
+                document.getElementById('imagePreview').innerHTML = '';
+                if (homework.images && homework.images.length > 0) {
+                    homework.images.forEach((img, index) => {
+                        this.addImagePreview(img, index);
+                    });
+                }
+                
+                this.selectedDeadline = {
+                    deadlineISO: homework.deadlineISO,
+                    presetId: homework.presetDeadlineId,
+                    presetDeadlineName: homework.presetDeadlineName
+                };
+                this.updateDeadlineInfo();
+                
+                this.initEditor();
+                this.updatePreview();
+                document.getElementById('homeworkModal').classList.add('active');
+            }
+            
+            addImagePreview(src, index) {
+                const preview = document.getElementById('imagePreview');
+                const item = document.createElement('div');
+                item.className = 'image-preview-item';
+                item.dataset.index = index;
+                item.innerHTML = `
+                    <img src="${src}" />
+                    <button type="button" class="delete-image-btn" onclick="this.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                preview.appendChild(item);
+            }
+            
+            saveHomework() {
+                const title = document.getElementById('homeworkTitle').value.trim();
+                const contentMarkdown = document.getElementById('homeworkContent').value.trim();
+                const content = document.getElementById('contentPreview').innerHTML.trim();
+                const subjectId = parseInt(document.getElementById('subjectSelect').value);
+                
+                if (!title) {
+                    alert('请填写作业标题！');
+                    return;
+                }
+                
+                if (!contentMarkdown) {
+                    alert('请填写作业内容！');
+                    return;
+                }
+                
+                if (!subjectId) {
+                    alert('请选择学科！');
+                    return;
+                }
+                
+                if (!this.selectedDeadline || !this.selectedDeadline.deadlineISO) {
+                    alert('请选择截止时间！');
+                    return;
+                }
+                
+                const deadlineISO = this.selectedDeadline.deadlineISO;
+                const images = [];
+                document.querySelectorAll('#imagePreview img').forEach(img => {
+                    images.push(img.src);
+                });
+                
+                const homework = {
+                    id: this.currentHomeworkId || Date.now().toString(),
+                    title,
+                    content,
+                    contentMarkdown,
+                    subjectId,
+                    deadlineISO,
+                    presetDeadlineId: this.selectedDeadline.presetId || null,
+                    presetDeadlineName: this.selectedDeadline.presetDeadlineName || null,
+                    images,
+                    createdAt: this.currentHomeworkId ? undefined : new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                if (this.currentHomeworkId) {
+                    const index = this.homeworks.findIndex(hw => hw.id === this.currentHomeworkId);
+                    if (index !== -1) {
+                        homework.createdAt = this.homeworks[index].createdAt;
+                        this.homeworks[index] = homework;
+                    }
+                } else {
+                    this.homeworks.push(homework);
+                }
+                
+                this.saveData();
+                this.renderHomeworkList();
+                this.closeModal('homeworkModal');
+            }
+            
+            deleteHomework(id) {
+                if (confirm('确定要删除这个作业吗？')) {
+                    const homework = this.homeworks.find(hw => hw.id === id);
+                    if (homework) {
+                        homework.deletedAt = new Date().toISOString();
+                        this.recycleBin.unshift(homework);
+                        if (this.recycleBin.length > 10) {
+                            this.recycleBin = this.recycleBin.slice(0, 10);
+                        }
+                        this.homeworks = this.homeworks.filter(hw => hw.id !== id);
+                        this.saveData();
+                        this.renderHomeworkList();
+                    }
+                }
+            }
+
+            deleteOverdueHomeworks() {
+                const overdueHomeworks = this.homeworks.filter(hw => this.isOverdue(hw.deadlineISO));
+                if (overdueHomeworks.length === 0) {
+                    alert('没有已逾期的作业');
+                    return;
+                }
+                if (confirm(`确定要删除 ${overdueHomeworks.length} 个已逾期的作业吗？`)) {
+                    overdueHomeworks.forEach(hw => {
+                        hw.deletedAt = new Date().toISOString();
+                        this.recycleBin.unshift(hw);
+                    });
+                    if (this.recycleBin.length > 10) {
+                        this.recycleBin = this.recycleBin.slice(0, 10);
+                    }
+                    this.homeworks = this.homeworks.filter(hw => !this.isOverdue(hw.deadlineISO));
+                    this.saveData();
+                    this.renderHomeworkList();
+                    alert(`已删除 ${overdueHomeworks.length} 个已逾期的作业`);
+                }
+            }
+
+            showRecycleBinModal() {
+                this.renderRecycleBin();
+                document.getElementById('recycleBinModal').classList.add('active');
+            }
+
+            renderRecycleBin() {
+                const list = document.getElementById('recycleBinList');
+                if (this.recycleBin.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-trash-alt"></i>
+                            <h3>回收站为空</h3>
+                        </div>
+                    `;
+                    return;
+                }
+                list.innerHTML = this.recycleBin.map((hw, index) => {
+                    const subject = this.subjects.find(s => s.id === hw.subjectId);
+                    const subjectColor = subject ? subject.color : '#3498db';
+                    const deletedDate = luxon.DateTime.fromISO(hw.deletedAt).toFormat('yyyy-MM-dd HH:mm');
+                    return `
+                        <div class="homework-card" style="border-left-color: #999; opacity: 0.8;">
+                            <div class="homework-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div>
+                                    <span class="subject-badge" style="background-color: ${subjectColor}; color: white;">
+                                        ${subject ? subject.name : '未知学科'}
+                                    </span>
+                                    <h3 style="margin-top: 8px; font-size: 1.1rem;">${this.escapeHtml(hw.title)}</h3>
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--text-light);">
+                                    <i class="fas fa-clock"></i> 删除于 ${deletedDate}
+                                </div>
+                            </div>
+                            <div class="homework-content" style="margin-top: 8px; font-size: 0.9rem;">
+                                ${hw.content}
+                            </div>
+                            <div class="homework-actions" style="margin-top: 12px;">
+                                <button class="primary-btn btn-sm" onclick="homeworkTracker.restoreHomework('${hw.id}')">
+                                    <i class="fas fa-undo"></i> 恢复
+                                </button>
+                                <button class="danger-btn btn-sm" onclick="homeworkTracker.permanentlyDeleteHomework('${hw.id}')">
+                                    <i class="fas fa-trash"></i> 永久删除
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            restoreHomework(id) {
+                const index = this.recycleBin.findIndex(hw => hw.id === id);
+                if (index !== -1) {
+                    const homework = this.recycleBin[index];
+                    delete homework.deletedAt;
+                    this.homeworks.push(homework);
+                    this.recycleBin.splice(index, 1);
+                    this.saveData();
+                    this.renderHomeworkList();
+                    this.renderRecycleBin();
+                }
+            }
+
+            permanentlyDeleteHomework(id) {
+                if (confirm('确定要永久删除这个作业吗？此操作不可恢复！')) {
+                    this.recycleBin = this.recycleBin.filter(hw => hw.id !== id);
+                    this.saveData();
+                    this.renderRecycleBin();
+                }
+            }
+
+            emptyRecycleBin() {
+                if (confirm('确定要清空回收站吗？此操作不可恢复！')) {
+                    this.recycleBin = [];
+                    this.saveData();
+                    this.renderRecycleBin();
+                }
+            }
+            
+            showAddSubjectModal() {
+                document.getElementById('subjectForm').reset();
+                document.getElementById('subjectColor').value = '#3498db';
+                document.getElementById('subjectColorPreview').style.backgroundColor = '#3498db';
+                document.getElementById('subjectModal').classList.add('active');
+            }
+            
+            saveSubject() {
+                const name = document.getElementById('newSubjectName').value.trim();
+                const color = document.getElementById('subjectColor').value;
+                
+                if (!name) {
+                    alert('请输入学科名称！');
+                    return;
+                }
+                
+                const newSubject = {
+                    id: Date.now(),
+                    name,
+                    color
+                };
+                
+                this.subjects.push(newSubject);
+                this.saveData();
+                this.renderSubjects();
+                this.renderSubjectSelect();
+                this.closeModal('subjectModal');
+            }
+            
+            deleteSubject(id) {
+                if (confirm('删除学科将同时删除该学科下的所有作业，确定要删除吗？')) {
+                    this.subjects = this.subjects.filter(s => s.id !== id);
+                    this.homeworks = this.homeworks.filter(hw => hw.subjectId !== id);
+                    this.saveData();
+                    this.renderSubjects();
+                    this.renderSubjectSelect();
+                    this.renderHomeworkList();
+                }
+            }
+            
+            showSettingsModal() {
+                this.renderSubjectEditList();
+                this.renderPresetSettings();
+                document.getElementById('settingsModal').classList.add('active');
+            }
+            
+            renderSubjectEditList() {
+                const list = document.getElementById('subjectEditList');
+                list.innerHTML = '';
+                
+                this.subjects.forEach(subject => {
+                    const item = document.createElement('div');
+                    item.className = 'subject-edit-item';
+                    item.innerHTML = `
+                        <div class="color-preview-box" style="background: ${subject.color}; width: 40px; height: 40px;"></div>
+                        <span style="flex: 1; font-weight: 500;">${subject.name}</span>
+                        <button type="button" class="danger-btn btn-sm" onclick="homeworkTracker.deleteSubject(${subject.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+            
+            renderPresetSettings() {
+                const list = document.getElementById('presetSettings');
+                list.innerHTML = '';
+                
+                for (const [presetId, preset] of Object.entries(this.presetDeadlines)) {
+                    const item = document.createElement('div');
+                    item.className = 'preset-edit-item';
+                    item.innerHTML = `
+                        <span style="flex: 1; font-weight: 500;">${preset.name}</span>
+                        <div class="time-input-group">
+                            <input type="number" class="time-input" value="${preset.hour}" min="0" max="23" 
+                                   onchange="homeworkTracker.updatePreset('${presetId}', 'hour', this.value)" />
+                            <span>:</span>
+                            <input type="number" class="time-input" value="${preset.minute}" min="0" max="59" 
+                                   onchange="homeworkTracker.updatePreset('${presetId}', 'minute', this.value)" />
+                        </div>
+                    `;
+                    list.appendChild(item);
+                }
+            }
+
+            updatePreset(presetId, field, value) {
+                if (this.presetDeadlines[presetId]) {
+                    this.presetDeadlines[presetId][field] = parseInt(value);
+                    this.saveData();
+                }
+            }
+
+            showThemeSettingsModal() {
+                document.getElementById('themeSettingsModal').classList.add('active');
+            }
+
+            resetBackground() {
+                document.body.style.backgroundImage = '';
+                document.getElementById('bgPreview').style.backgroundImage = '';
+                document.getElementById('bgPreview').textContent = '背景图片预览';
+                this.saveThemeSettings();
+            }
+
+            handleBackgroundImageUpload(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.body.style.backgroundImage = `url('${e.target.result}')`;
+                        document.getElementById('bgPreview').style.backgroundImage = `url('${e.target.result}')`;
+                        document.getElementById('bgPreview').textContent = '';
+                        this.saveThemeSettings();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            handleImageUpload(event) {
+                const files = Array.from(event.target.files);
+                const preview = document.getElementById('imagePreview');
+                const existingImages = preview.querySelectorAll('.image-preview-item').length;
+                
+                if (existingImages + files.length > 3) {
+                    alert('最多只能添加3张图片');
+                    return;
+                }
+
+                files.forEach((file, index) => {
+                    if (existingImages + index >= 3) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.addImagePreview(e.target.result, existingImages + index);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            initEditor() {
+                const textarea = document.getElementById('homeworkContent');
+                if (textarea) {
+                    textarea.addEventListener('input', () => this.updatePreview());
+                }
+            }
+
+            updatePreview() {
+                const textarea = document.getElementById('homeworkContent');
+                const preview = document.getElementById('contentPreview');
+                if (textarea && preview) {
+                    preview.innerHTML = this.parseMarkdown(textarea.value);
+                }
+            }
+
+            parseMarkdown(text) {
+                let result = text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/~~(.*?)~~/g, '<del>$1</del>')
+                    .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+                    .replace(/^## (.*?)$/gm, '<h3 style="font-size:1.1rem">$1</h3>')
+                    .replace(/^# (.*?)$/gm, '<h3 style="font-size:1.3rem">$1</h3>')
+                    .replace(/^- (.*?)$/gm, '<li>$1</li>')
+                    .replace(/`(.*?)`/g, '<code>$1</code>')
+                    .replace(/\n/g, '<br>');
+
+                if (result.includes('<li>')) {
+                    result = result.replace(/(<li>.*?<\/li>)+/s, match => `<ul>${match}</ul>`);
+                    result = result.replace(/<\/li><br><li>/g, '</li><li>');
+                }
+
+                return result;
+            }
+
+            insertMarkdown(before, after = '') {
+                const textarea = document.getElementById('homeworkContent');
+                if (!textarea) return;
+
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const selectedText = textarea.value.substring(start, end);
+                const newText = textarea.value.substring(0, start) + before + selectedText + after + textarea.value.substring(end);
+                
+                textarea.value = newText;
+                textarea.focus();
+                
+                if (selectedText) {
+                    textarea.setSelectionRange(start + before.length, end + before.length);
+                } else {
+                    textarea.setSelectionRange(start + before.length, start + before.length);
+                }
+                
+                this.updatePreview();
+            }
+
+            clearContent() {
+                if (confirm('确定要清空作业内容吗？')) {
+                    const textarea = document.getElementById('homeworkContent');
+                    if (textarea) {
+                        textarea.value = '';
+                        this.updatePreview();
+                    }
+                }
+            }
+
+            formatText(command) {
+                document.execCommand(command, false, null);
+            }
+
+            setFontSize(size) {
+                if (size) {
+                    document.execCommand('fontSize', false, '7');
+                    const fontElements = document.querySelectorAll('#homeworkContent font[size="7"]');
+                    fontElements.forEach(el => {
+                        el.removeAttribute('size');
+                        el.style.fontSize = size;
+                    });
+                }
+            }
+
+            clearFormat() {
+                document.execCommand('removeFormat', false, null);
+            }
+
+            switchDeadlineType(type) {
+                this.deadlineType = type;
+                const presetBtn = document.getElementById('presetTypeBtn');
+                const customBtn = document.getElementById('customTypeBtn');
+                const presetOptions = document.getElementById('presetDeadlineOptions');
+                const customOptions = document.getElementById('customDeadlineOptions');
+
+                presetBtn.classList.toggle('active', type === 'preset');
+                customBtn.classList.toggle('active', type === 'custom');
+                presetOptions.style.display = type === 'preset' ? 'grid' : 'none';
+                customOptions.style.display = type === 'custom' ? 'block' : 'none';
+            }
+
+            selectPresetDeadline(presetId) {
+                const preset = this.presetDeadlines[presetId];
+                if (preset) {
+                    this.selectedDeadline = {
+                        deadlineISO: this.calculatePresetDeadline(presetId),
+                        presetId: presetId,
+                        presetDeadlineName: preset.name
+                    };
+                    
+                    document.querySelectorAll('.preset-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    event.target.classList.add('selected');
+                    
+                    this.updateDeadlineInfo();
+                }
+            }
+
+            updateCustomDeadlineInfo() {
+                const date = document.getElementById('deadlineDate').value;
+                const time = document.getElementById('deadlineTime').value || '20:00';
+                
+                if (date) {
+                    const dateTime = new Date(`${date}T${time}`);
+                    this.selectedDeadline = {
+                        deadlineISO: dateTime.toISOString(),
+                        presetId: null,
+                        presetDeadlineName: '自定义时间'
+                    };
+                    this.updateDeadlineInfo();
+                }
+            }
+
+            updateDeadlineInfo() {
+                const infoEl = document.getElementById('selectedDeadlineInfo');
+                if (this.selectedDeadline) {
+                    const formattedTime = this.getFormattedDateTime(this.selectedDeadline.deadlineISO);
+                    infoEl.textContent = `已选择: ${this.selectedDeadline.presetDeadlineName || '自定义时间'} (${formattedTime})`;
+                } else {
+                    infoEl.textContent = '';
+                }
+            }
+
+            backupData() {
+                const data = {
+                    subjects: this.subjects,
+                    homeworks: this.homeworks,
+                    presetDeadlines: this.presetDeadlines
+                };
+                const dataStr = JSON.stringify(data, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `homework_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            restoreData(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            if (data.subjects && data.homeworks) {
+                                this.subjects = data.subjects;
+                                this.homeworks = data.homeworks;
+                                if (data.presetDeadlines) {
+                                    this.presetDeadlines = data.presetDeadlines;
+                                }
+                                this.saveData();
+                                this.renderSubjects();
+                                this.renderSubjectSelect();
+                                this.renderHomeworkList();
+                                alert('数据恢复成功！');
+                            } else {
+                                alert('数据格式不正确');
+                            }
+                        } catch (err) {
+                            alert('恢复失败: ' + err.message);
+                        }
+                        event.target.value = '';
+                    };
+                    reader.readAsText(file);
+                }
+            }
+
+            clearAllData() {
+                if (confirm('确定要清除所有数据吗？此操作不可撤销！')) {
+                    this.subjects = [...this.defaultSubjects];
+                    this.homeworks = [];
+                    this.saveData();
+                    this.renderSubjects();
+                    this.renderSubjectSelect();
+                    this.renderHomeworkList();
+                    alert('数据已清除');
+                }
+            }
+
+            closeModal(modalId) {
+                document.getElementById(modalId).classList.remove('active');
+            }
+        }
+
+        const homeworkTracker = new HomeworkTracker();
+
+        function showAddHomeworkModal() { homeworkTracker.showAddHomeworkModal(); }
+        function showAddSubjectModal() { homeworkTracker.showAddSubjectModal(); }
+        function showSettingsModal() { homeworkTracker.showSettingsModal(); }
+        function showThemeSettingsModal() { homeworkTracker.showThemeSettingsModal(); }
+        function saveHomework() { homeworkTracker.saveHomework(); }
+        function saveSubject() { homeworkTracker.saveSubject(); }
+        function resetBackground() { homeworkTracker.resetBackground(); }
+        function handleBackgroundImageUpload(e) { homeworkTracker.handleBackgroundImageUpload(e); }
+        function handleImageUpload(e) { homeworkTracker.handleImageUpload(e); }
+        function formatText(cmd) { homeworkTracker.formatText(cmd); }
+        function setFontSize(size) { homeworkTracker.setFontSize(size); }
+        function clearFormat() { homeworkTracker.clearFormat(); }
+        function clearContent() { homeworkTracker.clearContent(); }
+        function insertMarkdown(before, after) { homeworkTracker.insertMarkdown(before, after); }
+        function switchDeadlineType(type) { homeworkTracker.switchDeadlineType(type); }
+        function selectPresetDeadline(id) { homeworkTracker.selectPresetDeadline(id); }
+        function closeModal(id) { homeworkTracker.closeModal(id); }
+        function toggleSubjectFilter() { homeworkTracker.toggleSubjectFilter(); }
+        function applyTheme(color) { 
+            homeworkTracker.applyThemeColor(color); 
+            homeworkTracker.saveThemeSettings();
+            document.getElementById('themeColor').value = color;
+        }
+        function updateCardOpacity(val) { homeworkTracker.updateCardOpacity(val); }
+        function backupData() { homeworkTracker.backupData(); }
+        function restoreData(e) { homeworkTracker.restoreData(e); }
+        function clearAllData() { homeworkTracker.clearAllData(); }
+        function deleteOverdueHomeworks() { homeworkTracker.deleteOverdueHomeworks(); }
+        function showRecycleBinModal() { homeworkTracker.showRecycleBinModal(); }
+        function emptyRecycleBin() { homeworkTracker.emptyRecycleBin(); }
+    </script>
+</body>
+</html>
